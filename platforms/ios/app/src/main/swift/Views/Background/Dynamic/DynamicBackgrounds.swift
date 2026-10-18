@@ -5,6 +5,7 @@ import Foundation
 @preconcurrency import MetalKit
 import SwiftUI
 import UIKit
+import Perception
 
 // MARK: - DynamicBackgroundStyle
 
@@ -209,7 +210,9 @@ struct MulticolorAmbientBackground: View {
   let theme: DynamicBackgroundTheme
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate
@@ -287,7 +290,9 @@ struct LightSpeedBackground: View {
   let theme: DynamicBackgroundTheme
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate
@@ -581,7 +586,9 @@ struct SpatialRetroBackground: View {
   let theme: DynamicBackgroundTheme
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate
@@ -804,7 +811,9 @@ struct TowersOrbsBackground: View {
   let theme: DynamicBackgroundTheme
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate
@@ -1401,7 +1410,9 @@ struct PlayStation2MenuBackground: View {
   @Environment(\.menuBackgroundSessionStart) private var cameraStartDate
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     let framesPerSecond = max(
       1,
       theme.particleSettings.backgrounds.playStation2MenuFramesPerSecond
@@ -4098,7 +4109,9 @@ struct PlayStation3XMBByMartBackground: View {
   @Environment(\.menuBackgroundSessionStart) private var menuBackgroundSessionStart
 
   @ViewBuilder
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     if theme.usesPlayStation4PaletteBackdrop {
       ZStack {
         PlayStation4WavesBackground(theme: theme, showsWaves: false)
@@ -4267,7 +4280,9 @@ struct FaceButtonsBackground: View {
     _displayedTheme = State(initialValue: theme)
   }
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicFaceButtons) { timeline in
       let time = timeline.date.timeIntervalSinceReferenceDate
       let motionTime =
@@ -4368,7 +4383,7 @@ struct FaceButtonsBackground: View {
       }
       .ignoresSafeArea()
     }
-    .onChange(of: theme) { _, newTheme in
+    .onChangeCompat(of: theme) { _, newTheme in
       previousTheme = displayedTheme
       displayedTheme = newTheme
       paletteTransitionStartTime = Date.timeIntervalSinceReferenceDate
@@ -4799,7 +4814,9 @@ struct PlayStationPortableBlurBackground: View {
   let theme: DynamicBackgroundTheme
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate
@@ -5005,7 +5022,9 @@ struct PlayStation3SplinesBackground: View {
   let ribbonSizing: PlayStationRibbonSizing
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate
@@ -5301,7 +5320,9 @@ struct PlayStation4ParticlesBackground: View {
   let theme: DynamicBackgroundTheme
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate
@@ -5574,7 +5595,9 @@ struct PlayStation4WavesBackground: View {
   var showsWaves = true
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate
@@ -5832,7 +5855,9 @@ struct PlayStationRibbonsBackground: View {
   let theme: DynamicBackgroundTheme
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     AdaptiveAnimationTimeline(domain: .dynamicBackground) { timeline in
       let time =
         timeline.date.timeIntervalSinceReferenceDate

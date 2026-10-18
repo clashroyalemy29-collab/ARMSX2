@@ -4,6 +4,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
+import Perception
 
 private extension UTType {
     static let armsx2SettingsPreset = UTType(
@@ -98,7 +99,9 @@ struct SettingsPresetsView: View {
     @State private var exportDocument = SettingsPresetDocument(data: Data())
     @State private var isExportingPreset = false
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             folderAccessSection
             devicePresetsSection

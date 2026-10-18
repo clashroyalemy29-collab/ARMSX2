@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct PadGroupPosition: Codable, Equatable {
     var x: CGFloat
@@ -109,7 +110,7 @@ enum VirtualPadButtonOffset {
     }
 }
 
-@Observable
+@Perceptible
 final class PadLayoutStore: @unchecked Sendable {
     static let shared = PadLayoutStore()
 

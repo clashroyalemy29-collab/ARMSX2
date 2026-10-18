@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct LicenseEntry: Identifiable {
     let id = UUID()
@@ -39,7 +40,9 @@ private let licenses: [LicenseEntry] = [
 struct LicenseView: View {
     @Environment(\.uiAccentColour) private var accentColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         List(licenses) { entry in
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.name)

@@ -4,6 +4,7 @@
 import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
+import Perception
 
 enum BackgroundAssetRole: String, CaseIterable, Identifiable {
     case primary, landscape
@@ -26,11 +27,13 @@ struct BackgroundSourcePicker: ViewModifier {
     private var settings: SettingsStore { SettingsStore.shared }
     private var currentAsset: BackgroundAsset? { existingAsset() }
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
             .controllerPrompt(dialogTitle, isPresented: $isPresented, actions: sourceActions)
             .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .any(of: [.images, .videos]))
-            .onChange(of: selectedPhotoItem) { _, item in
+            .onChangeCompat(of: selectedPhotoItem) { _, item in
                 guard let item else { return }
                 selectedPhotoItem = nil
                 Task { @MainActor in await importPhotoItem(item) }

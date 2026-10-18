@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct GraphicsTab: View {
     // Master toggle + gating.
@@ -102,7 +103,9 @@ struct GraphicsTab: View {
         (5, "Ultra")
     ]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         PerGameTab(
             title: settings.localized(
                 showsOnlyShaders ? "Shaders" : "Graphics"

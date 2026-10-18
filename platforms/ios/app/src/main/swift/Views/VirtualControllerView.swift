@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 // Posted when a dynamic input zone classifies a touch as a tap, so the game
 // screen can reveal a hidden menu button the zones would otherwise swallow.
@@ -265,7 +266,9 @@ struct VirtualControllerView: View {
         .position(x: visualRect.midX, y: visualRect.midY)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             let descriptor = effectiveSkinDescriptor
             let skin = descriptor.virtualPadSkin
@@ -307,32 +310,32 @@ struct VirtualControllerView: View {
             activeTouchActionSession.refreshHardcoreAutomaticFireRestriction()
             configureAuxiliaryInputs()
         }
-        .onChange(of: skinLibrary.selectedSkinID) { _, _ in
+        .onChangeCompat(of: skinLibrary.selectedSkinID) { _, _ in
             ARMSX2VirtualPadMaskImageCache.prewarm(descriptor: effectiveSkinDescriptor)
         }
-        .onChange(of: skinDescriptor) { _, _ in
+        .onChangeCompat(of: skinDescriptor) { _, _ in
             ARMSX2VirtualPadMaskImageCache.prewarm(descriptor: effectiveSkinDescriptor)
         }
-        .onChange(of: dynamicSettings.swipeCamera) { _, _ in
+        .onChangeCompat(of: dynamicSettings.swipeCamera) { _, _ in
             resetDynamicInputs()
             configureAuxiliaryInputs()
         }
-        .onChange(of: dynamicSettings.gyroscopeCamera) { _, _ in
+        .onChangeCompat(of: dynamicSettings.gyroscopeCamera) { _, _ in
             configureAuxiliaryInputs()
         }
-        .onChange(of: dynamicSettings.legacyThumbsticks) { _, _ in
+        .onChangeCompat(of: dynamicSettings.legacyThumbsticks) { _, _ in
             resetDynamicInputs()
         }
-        .onChange(of: dynamicSettings.dynamicThumbsticks) { _, _ in
+        .onChangeCompat(of: dynamicSettings.dynamicThumbsticks) { _, _ in
             resetDynamicInputs()
         }
-        .onChange(of: dynamicSettings.convertSwipeToDynamicJoystick) { _, _ in
+        .onChangeCompat(of: dynamicSettings.convertSwipeToDynamicJoystick) { _, _ in
             resetDynamicInputs()
         }
-        .onChange(of: dynamicSettings.leftThumbstickActionsEnabled) { _, _ in
+        .onChangeCompat(of: dynamicSettings.leftThumbstickActionsEnabled) { _, _ in
             resetDynamicInputs()
         }
-        .onChange(of: dynamicSettings.rightThumbstickActionsEnabled) { _, _ in
+        .onChangeCompat(of: dynamicSettings.rightThumbstickActionsEnabled) { _, _ in
             resetDynamicInputs()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
@@ -912,7 +915,9 @@ private struct SkinManifestButtonView: View {
         }
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             Color.clear
                 .frame(width: hitRect.width, height: hitRect.height)

@@ -4,6 +4,7 @@
 import SwiftUI
 import UIKit
 import ImageIO
+import Perception
 
 struct CoverThumbnailView: View {
     let gameName: String
@@ -19,7 +20,9 @@ struct CoverThumbnailView: View {
         "\(coverSignature ?? "placeholder")|\(Int(width))x\(Int(height))"
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(Color(.secondarySystemGroupedBackground))

@@ -1,7 +1,7 @@
 // ThemeGalleryStore.swift — Persistent, versioned appearance snapshots.
 // SPDX-License-Identifier: GPL-3.0+
 import SwiftUI
-import Observation
+import Perception
 import Foundation
 
 /// Game Library View Options are stored outside SettingsStore so the large
@@ -348,7 +348,7 @@ enum AppearanceThemeSelection: Hashable, Identifiable {
     }
 }
 
-@MainActor @Observable
+@MainActor @Perceptible
 final class ThemeGalleryStore {
     static let shared = ThemeGalleryStore()
     private(set) var themes: [SavedAppearanceTheme]
@@ -357,11 +357,11 @@ final class ThemeGalleryStore {
     // Hide the presenting menu without destroying its navigation
     // stack, so previews reveal the one existing background renderer.
     var isPreviewing = false
-    @ObservationIgnored private let defaults: UserDefaults
-    @ObservationIgnored private var customDraftPersistenceTask:
+    @PerceptionIgnored private let defaults: UserDefaults
+    @PerceptionIgnored private var customDraftPersistenceTask:
         Task<Void, Never>?
     // Entries this build cannot decode, kept as stored so a build that can still has them.
-    @ObservationIgnored private var undecodableThemes: [Any]
+    @PerceptionIgnored private var undecodableThemes: [Any]
     private static let themesKey = "ARMSX2iOSSavedAppearanceThemesV1"
     private static let draftKey = "ARMSX2iOSCustomAppearanceDraftV1"
     private static let activeSavedThemeKey =

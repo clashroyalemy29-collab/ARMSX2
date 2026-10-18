@@ -3,6 +3,7 @@
 
 import Foundation
 import SwiftUI
+import Perception
 
 struct PadLayoutSnapshot: Codable, Equatable {
     var portrait: [String: PadGroupPosition]
@@ -190,7 +191,7 @@ private struct PadLayoutPresetLibrary: Codable {
     }
 }
 
-@Observable
+@Perceptible
 final class PadLayoutPresetStore: @unchecked Sendable {
     static let shared = PadLayoutPresetStore()
     static let schemaVersion = 2

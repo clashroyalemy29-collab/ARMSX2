@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import Foundation
+import Perception
 
 enum VirtualPadActionButton: Int, CaseIterable, Hashable, Identifiable {
     case leftShoulder
@@ -176,7 +177,7 @@ enum DynamicCrosshairAnimation: Int, CaseIterable, Identifiable {
 }
 
 @MainActor
-@Observable
+@Perceptible
 final class DynamicThumbstickSettings {
     static let shared = DynamicThumbstickSettings()
     private static let section = "ARMSX2iOS/DynamicThumbsticks"

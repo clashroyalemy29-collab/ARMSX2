@@ -1,7 +1,7 @@
 // UIFrameRateSettings.swift — user-selectable UI and effect frame pacing
 // SPDX-License-Identifier: GPL-3.0+
 
-import Observation
+import Perception
 import QuartzCore
 import SwiftUI
 import UIKit
@@ -205,7 +205,7 @@ struct UIFrameRateConfiguration: Equatable, Sendable {
 }
 
 @MainActor
-@Observable
+@Perceptible
 final class UIFrameRateSettings {
     static let shared = UIFrameRateSettings()
 
@@ -535,7 +535,9 @@ struct AdaptiveAnimationTimeline<Content: View>: View {
         self.content = content
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         TimelineView(
             .animation(
                 minimumInterval: configuration.interval(

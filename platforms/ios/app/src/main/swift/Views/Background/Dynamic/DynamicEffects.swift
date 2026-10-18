@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 @MainActor
 enum ARMSX2BouncingLogoAsset {
@@ -390,7 +391,9 @@ struct DynamicParticleOverlay: View {
   @Environment(\.uiFrameRateConfiguration) private var frameRates
 
   @ViewBuilder
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     ZStack {
       if settings.isEnabled {
         if settings.style == .xmbMart {
@@ -491,7 +494,9 @@ struct DynamicParticleOverlay: View {
     let sessionStart: Date
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
       if let logoImage = logoStore.image {
         GeometryReader { proxy in
           AdaptiveAnimationTimeline(domain: .dynamicParticles) { timeline in

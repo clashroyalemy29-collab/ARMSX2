@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct OverlaySettingsView: View {
     @State private var settings = SettingsStore.shared
@@ -27,7 +28,9 @@ struct OverlaySettingsView: View {
         "overlay.show-device-stats",
     ]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section(settings.localized("Performance Overlay")) {
                 Picker(settings.localized("Preset"), selection: $settings.osdPreset) {

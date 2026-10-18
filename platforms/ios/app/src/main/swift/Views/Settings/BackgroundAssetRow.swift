@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct BackgroundAssetRow: View {
     let title: String
@@ -15,7 +16,9 @@ struct BackgroundAssetRow: View {
         return caption ?? ""
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 ZStack {

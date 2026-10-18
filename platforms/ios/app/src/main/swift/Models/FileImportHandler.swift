@@ -5,9 +5,10 @@ import SwiftUI
 import Foundation
 import UniformTypeIdentifiers
 import UIKit
+import Perception
 
 @MainActor
-@Observable
+@Perceptible
 final class FileImportHandler {
     static let shared = FileImportHandler()
 

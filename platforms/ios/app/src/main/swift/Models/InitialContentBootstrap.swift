@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import Foundation
+import Perception
 
 @MainActor
-@Observable
+@Perceptible
 final class InitialContentBootstrap {
     static let shared = InitialContentBootstrap()
     nonisolated static let didChangeNotification = Notification.Name("ARMSX2iOSInitialContentDidChange")

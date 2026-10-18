@@ -4,6 +4,7 @@
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
+import Perception
 
 private struct StorageReport: Sendable, Equatable {
     var appCacheBytes: Int64 = 0
@@ -56,12 +57,14 @@ private struct StorageExternalGamesAlertCommandListener: View {
     let controllerInput: MenuControllerInputRouter
     let onCommand: (MenuControllerCommand) -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
-            .onChange(of: controllerInput.latestEvent) { _, event in
+            .onChangeCompat(of: controllerInput.latestEvent) { _, event in
                 guard let event,
                       event.captureOwner
                         == MenuControllerNavigationCaptureOwner
@@ -321,7 +324,9 @@ struct StorageSettingsView: View {
         return types
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             Form {
                 Section(settings.localized("Usage")) {
@@ -356,7 +361,7 @@ struct StorageSettingsView: View {
                 .controllerAccessibilityTargetID("settings.storage.add-folder")
 
                 if externalLibrary.directories.isEmpty {
-                    ContentUnavailableView(
+                    ContentUnavailableCompat(
                         settings.localized("No External Games"),
                         systemImage: "externaldrive",
                         description: Text(settings.localized("Add a folder or game file from Files to play without copying it into ARMSX2."))
@@ -485,10 +490,10 @@ struct StorageSettingsView: View {
             externalLibrary.reload()
             await refreshReport()
         }
-        .onChange(of: externalActionMessage) { _, _ in
+        .onChangeCompat(of: externalActionMessage) { _, _ in
             updateExternalGamesAlertCapture()
         }
-        .onChange(of: controllerInput?.hasConnectedController) { _, _ in
+        .onChangeCompat(of: controllerInput?.hasConnectedController) { _, _ in
             updateExternalGamesAlertCapture()
         }
         .onDisappear {

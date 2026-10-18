@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 // MARK: - Overlay Theme
 
@@ -77,7 +78,9 @@ struct OverlayFrostBackground: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let gradient = LinearGradient(
             colors: [OverlayTheme.shellGradientTop, OverlayTheme.shell],
             startPoint: .top,
@@ -136,7 +139,9 @@ struct OverlayPanelScaffold<Content: View>: View {
         self.content = content()
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         content
             .dynamicTypeSize(...DynamicTypeSize.accessibility3)
             .tint(accentColour)
@@ -166,7 +171,9 @@ struct OverlaySectionCard<Content: View>: View {
         reduceTransparency || colorSchemeContrast == .increased
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(alignment: .leading, spacing: compact ? 6 : 10) {
             if let title {
                 Text(title)
@@ -218,7 +225,9 @@ struct OverlayHeader: View {
         self.compact = compact
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(spacing: compact ? 10 : 12) {
             Image(systemName: systemImage)
                 .font(.system(size: compact ? 24 : 30))
@@ -312,7 +321,9 @@ struct OverlayActionRow: View {
         self.action = action
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Button(action: action) {
             HStack(spacing: OverlayTheme.rowIconSpacing) {
                 if let systemImage {
@@ -382,7 +393,9 @@ struct OverlayToggleRow: View {
         self._isOn = isOn
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Toggle(isOn: $isOn) {
             HStack(spacing: OverlayTheme.rowIconSpacing) {
                 Image(systemName: systemImage)

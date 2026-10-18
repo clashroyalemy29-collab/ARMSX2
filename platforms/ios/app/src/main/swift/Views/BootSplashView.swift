@@ -4,6 +4,7 @@
 import AVFoundation
 import SwiftUI
 import UIKit
+import Perception
 
 struct BootSplashView: View {
     private static let hardTimeout: UInt64 = 6_000_000_000
@@ -19,7 +20,9 @@ struct BootSplashView: View {
     @State private var playbackReady = ARMSX2Bridge.isIdleVMPrewarmResolved()
     @State private var playbackStarted = false
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             Color.black
                 .ignoresSafeArea()

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 /// Ten fixed rows with Save and Load on each. The pad moves by row and keeps its column.
 struct SaveStatesPanel: View {
@@ -89,7 +90,9 @@ struct SaveStatesPanel: View {
         }
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let graph = currentGraph
         Group {
             if layout == .line || layout == .wideLine {
@@ -202,10 +205,10 @@ struct SaveStatesPanel: View {
                 },
                 onCancel: { keyboardRequest = nil }
             )
-            .presentationBackground(.clear)
+            .presentationBackgroundClearCompat()
             .appStatusBarHidden()
         }
-        .onChange(of: landscape) { _, _ in
+        .onChangeCompat(of: landscape) { _, _ in
             // The menu is anchored to a row that a new layout may have scrolled away.
             if menuSlot != nil { closeMenu() }
         }
@@ -799,7 +802,9 @@ private struct SaveStateRowView: View {
 
     private var title: String { row.title(settings) }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if layout == .twoLine {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
@@ -1046,7 +1051,9 @@ private struct SaveStateButton: View {
 
     @Environment(\.uiAccentColour) private var accentColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Button(action: action) {
             SaveStateButtonLabel(
                 title: title,
@@ -1084,7 +1091,9 @@ private struct SaveStateButtonLabel: View {
     @Environment(\.uiAccentColour) private var accentColour
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let filled = isEnabled && (focused || isPrimary)
         let foreground = filled
             ? onAccent(accentColour)
@@ -1161,7 +1170,9 @@ private struct SaveStateMenuView: View {
 
     @Environment(\.uiCriticalTextColour) private var criticalTextColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text([title, subtitle].compactMap { $0 }.joined(separator: " · "))
                 .font(.caption)
@@ -1219,7 +1230,9 @@ private struct SaveStateRenameCard: View {
 
     @Environment(\.uiAccentColour) private var accentColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
@@ -1255,7 +1268,7 @@ private struct SaveStateRenameCard: View {
                     .foregroundStyle(OverlayTheme.textPrimary)
                     .submitLabel(.done)
                     .onSubmit(onConfirm)
-                    .onChange(of: text) { _, value in
+                    .onChangeCompat(of: text) { _, value in
                         if value.count > SaveStateSlot.nameLimit {
                             text = String(value.prefix(SaveStateSlot.nameLimit))
                         }
@@ -1309,13 +1322,15 @@ private struct SaveStateRenameCard: View {
 
 /// The same settings as in Settings > Emulator.
 private struct SaveStateAutoSaveCard: View {
-    @Bindable var settings: SettingsStore
+    @Perception.Bindable var settings: SettingsStore
     let ids: (enabled: String, interval: String, leave: String, battery: String, done: String)
     let onDone: () -> Void
 
     @Environment(\.uiAccentColour) private var accentColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(settings.localized("Auto-save Settings"))
                 .font(.subheadline.weight(.semibold))
@@ -1387,7 +1402,9 @@ struct SaveStateUndoToast: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var focused: Bool
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if let item = undo.item {
             HStack(spacing: 12) {
                 ZStack {
@@ -1449,7 +1466,7 @@ struct SaveStateUndoToast: View {
             .accessibilityElement(children: .contain)
             .accessibilityFocused($focused)
             .accessibilityAction(.escape) { undo.finish() }
-            .onChange(of: focused) { _, value in undo.focusHeld = value }
+            .onChangeCompat(of: focused) { _, value in undo.focusHeld = value }
         }
     }
 }

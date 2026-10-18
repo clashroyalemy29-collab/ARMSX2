@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 /// Lets the parent live-preview transaction distinguish an explicit
 /// "Override" activation from an actual value adjustment. The inherited
@@ -46,7 +47,9 @@ struct NumberOverrideRow: View {
         self.settings = settings
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if value == sentinel {
             inheritRow
         } else {
@@ -117,7 +120,9 @@ struct FloatOverrideRow: View {
         self.settings = settings
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if value == sentinel {
             HStack {
                 Text(settings.localized(setting.title))

@@ -4,6 +4,7 @@
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
+import Perception
 #endif
 
 private enum SettingsStaticInfo {
@@ -155,7 +156,9 @@ private struct ControllerSettingsDestinationModifier: ViewModifier {
     let pane: SettingsPane
     @Binding var path: [SettingsPane]
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
             .id("settings.root.\(pane.rawValue)")
             .controllerAccessibilityActionTarget(
@@ -582,7 +585,9 @@ private struct SettingsDetailClearLiquidGlassModifier: ViewModifier {
     let decoratesRows: Bool
     let isClear: Bool
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
             // Native Form glass is installed in UIKit cell backgrounds. Read
             // each focused target's anchor at the Form boundary so the depth
@@ -681,7 +686,9 @@ struct SettingsRootView: View {
         SettingsPane(rawValue: rememberedRootPaneRawValue)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
 #if targetEnvironment(macCatalyst)
         NavigationSplitView {
             List(SettingsPane.rootCases, selection: $selectedPane) { pane in
@@ -912,11 +919,11 @@ struct SettingsRootView: View {
         }
         // The tail row clears the tab bar. Zero keeps RootView's library margin
         // from adding a second, empty scroll range below Help.
-        .contentMargins(.bottom, 0, for: .scrollContent)
+        .contentMarginsCompat(.bottom, 0)
         .scrollDisabled(false)
-        .scrollBounceBehavior(.always)
-        .scrollPosition(id: $rootScrollPositionID, anchor: .top)
-        .onChange(of: rootScrollPositionID) { _, _ in
+        .scrollBounceAlwaysCompat()
+        .scrollPositionCompat(id: $rootScrollPositionID, anchor: .top)
+        .onChangeCompat(of: rootScrollPositionID) { _, _ in
             // SwiftUI updates this binding for direct-finger scrolling as
             // well as programmatic/controller scrolling. Persist that common
             // viewport anchor instead of tying restoration to input mode.
@@ -980,7 +987,7 @@ struct SettingsRootView: View {
         .safeAreaInset(edge: .top) {
             Color.clear.frame(height: 6)
         }
-        .onChange(of: menuTabIsActive) { _, isActive in
+        .onChangeCompat(of: menuTabIsActive) { _, isActive in
             if isActive,
                rootScrollPositionID == nil,
                !rememberedRootScrollPositionID.isEmpty {
@@ -1000,7 +1007,7 @@ struct SettingsRootView: View {
             if navigationPath.last == pane {
                 presentedSettingsDetail(for: pane)
                 // The safe area spacer already clears the tab bar.
-                .contentMargins(.bottom, 0, for: .scrollContent)
+                .contentMarginsCompat(.bottom, 0)
                 .background {
                     if pane != .appearance {
                         settingsRightStickScrollTarget(
@@ -1017,7 +1024,7 @@ struct SettingsRootView: View {
             }
         }
         }
-        .onChange(of: resetToRootRequest) { _, _ in
+        .onChangeCompat(of: resetToRootRequest) { _, _ in
             guard !navigationPath.isEmpty else { return }
             var transaction = Transaction(animation: nil)
             transaction.disablesAnimations = true
@@ -1025,7 +1032,7 @@ struct SettingsRootView: View {
                 navigationPath.removeAll()
             }
         }
-        .onChange(of: navigationPath) { previousPath, currentPath in
+        .onChangeCompat(of: navigationPath) { previousPath, currentPath in
             // Remember the root row from the route itself. The root List can
             // recycle/unregister its focused probe before the shared session
             // observes the scope change, so probe-owned memory may otherwise
@@ -1453,7 +1460,9 @@ struct SettingsRootView: View {
 private struct LanguageSettingsView: View {
     @State private var settings = SettingsStore.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section(settings.localized("Interface Language")) {
                 Picker(settings.localized("App Language"), selection: $settings.appLanguage) {
@@ -1482,7 +1491,9 @@ private struct LanguageSettingsView: View {
 private struct SettingsAboutView: View {
     @State private var settings = SettingsStore.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section(settings.localized("App")) {
                 HStack {
@@ -1518,7 +1529,9 @@ private struct NetworkSettingsView: View {
         "settings.network.add-host",
     ]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section(settings.localized("PS2 HDD")) {
                 Toggle(settings.localized("Enable DEV9 Virtual HDD"), isOn: $settings.dev9HddEnabled)
@@ -1629,7 +1642,7 @@ private struct NetworkSettingsView: View {
             loadNetworkAdaptersIfNeeded()
             loadHosts()
         }
-        .onChange(of: hosts) { _, newHosts in
+        .onChangeCompat(of: hosts) { _, newHosts in
             guard hasLoadedHosts, newHosts != lastPersistedHosts else {
                 return
             }

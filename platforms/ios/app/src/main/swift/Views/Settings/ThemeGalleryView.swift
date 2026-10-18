@@ -1,6 +1,7 @@
 // ThemeGalleryView.swift — Themes, saved designs, palettes and effects.
 // SPDX-License-Identifier: GPL-3.0+
 import SwiftUI
+import Perception
 
 struct ThemeGalleryView: View {
     private enum Page: String, CaseIterable, Identifiable {
@@ -34,7 +35,9 @@ struct ThemeGalleryView: View {
     @State private var pendingDeletion: SavedAppearanceTheme?
     @AppStorage("ARMSX2iOSDynamicSavedPaletteColors") private var savedColorsJSON = "[]"
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             NavigationStack {
                 ScrollView {
@@ -97,7 +100,7 @@ struct ThemeGalleryView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .presentationBackground(.clear)
+        .presentationBackgroundClearCompat()
         .presentationDragIndicator(isPreviewing ? .hidden : .visible)
         .onAppear {
             guard original == nil else { return }
@@ -107,12 +110,12 @@ struct ThemeGalleryView: View {
             customPreviewSnapshot = gallery.customDraft
             preferences = settings.dynamicAppearancePreferences
         }
-        .onChange(of: page) { _, page in
+        .onChangeCompat(of: page) { _, page in
             endPreview()
             if page == .shared { paletteTarget = .shared }
             if page == .ribbons { paletteTarget = .ribbons }
         }
-        .onChange(of: preferences) { _, updated in
+        .onChangeCompat(of: preferences) { _, updated in
             // A preset synchronizes the binding too; only a user edit differs.
             guard updated != settings.dynamicAppearancePreferences else { return }
             rememberUndo()
@@ -120,7 +123,7 @@ struct ThemeGalleryView: View {
             settings.dynamicAppearancePreferences = updated
             preview(page.rawValue)
         }
-        .onChange(of: livePreview) { _, enabled in
+        .onChangeCompat(of: livePreview) { _, enabled in
             if !enabled { endPreview() }
         }
         .onDisappear {
@@ -143,7 +146,7 @@ struct ThemeGalleryView: View {
                 },
                 onCancel: { showsNameKeyboard = false }
             )
-            .presentationBackground(.clear)
+            .presentationBackgroundClearCompat()
             .appStatusBarHidden()
         }
         .controllerPrompt(
@@ -233,7 +236,7 @@ struct ThemeGalleryView: View {
             }
         case .saved:
             if gallery.themes.isEmpty {
-                ContentUnavailableView(
+                ContentUnavailableCompat(
                     "No Saved Themes", systemImage: "paintpalette",
                     description: Text("Choose Save Custom Theme to keep your current design.")
                 )

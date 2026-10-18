@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 /// What the bridge knows about one state file, read off the main thread: it opens every zip.
 struct SaveStateFile: Sendable {
@@ -236,7 +237,7 @@ enum SaveStateFormat {
 
 /// The one action that can still be undone, and its 8 second window.
 @MainActor
-@Observable
+@Perceptible
 final class SaveStateUndoModel {
     enum Action {
         case load(path: String)

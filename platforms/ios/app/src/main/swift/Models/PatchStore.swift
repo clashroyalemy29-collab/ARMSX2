@@ -8,9 +8,10 @@
 
 import Foundation
 import SwiftUI
+import Perception
 
 @MainActor
-@Observable
+@Perceptible
 final class PatchStore {
     static let shared = PatchStore()
 

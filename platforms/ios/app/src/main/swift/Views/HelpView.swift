@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 struct HelpSection: Identifiable {
     let id = UUID()
@@ -124,7 +125,9 @@ struct HelpView: View {
         backgroundConfigured
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
 #if targetEnvironment(macCatalyst)
         NavigationSplitView {
             List(selection: $selectedTopic) {

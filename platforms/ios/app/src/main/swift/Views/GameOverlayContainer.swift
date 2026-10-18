@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 /// How an in-game overlay should arrange its content for the current device class.
 /// Replaces a single broad isLandscape/useWideLayout boolean so iPad, iPhone
@@ -114,7 +115,9 @@ struct GameOverlayContainer<Content: View>: View {
     // landscape deck. GeometryReader still re-evaluates on orientation/size change.
     private var isIPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         // Outer reader sees the keyboard, inner one does not. Card is sized off the inner
         // one so it cannot collapse; the difference is how much the keyboard covers.
         GeometryReader { keyboardGeo in

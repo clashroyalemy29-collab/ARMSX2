@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct ShaderPresetSaveRequest: Identifiable {
     let token: String
@@ -29,7 +30,9 @@ struct ShaderPresetSaveSheet: View {
         _name = State(initialValue: request.suggestedName)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             Form {
                 Section {

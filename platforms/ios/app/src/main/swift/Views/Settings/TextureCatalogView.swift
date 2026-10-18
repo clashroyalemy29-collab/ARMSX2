@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 private enum TextureDownloadError: String, LocalizedError {
     case unreachable = "Can't reach the texture pack server. Check your connection and try again."
@@ -44,7 +45,9 @@ struct TextureCatalogView: View {
         self.controllerInput = controllerInput
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         List {
             if packs != nil {
                 if yours.isEmpty && others.isEmpty {

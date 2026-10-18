@@ -4,6 +4,7 @@
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
+import Perception
 
 private enum DynamicActionRole {
     case aim
@@ -99,7 +100,9 @@ struct VirtualPadSettingsView: View {
         self.onOpenPane = onOpenPane
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section(settings.localized("Appearance")) {
                 controllerPicker(settings.localized("Button Skin"), selection: Binding<String>(
@@ -1403,7 +1406,9 @@ private struct DynamicControlSlider: View {
 
     private var settings: SettingsStore { SettingsStore.shared }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NumberRow(title,
                   value: $value,
                   in: range,
@@ -1428,7 +1433,9 @@ private struct DynamicSwipeSensitivityControl: View {
 
     private var settings: SettingsStore { SettingsStore.shared }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(alignment: .leading, spacing: 10) {
             // The toggle used to carry the readout too. It moved down onto the row that actually
             // changes it, which is also the only way the slider gets an announced value.

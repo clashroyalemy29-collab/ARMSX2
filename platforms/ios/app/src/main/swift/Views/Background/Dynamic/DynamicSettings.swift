@@ -4,6 +4,7 @@
 import Foundation
 import SwiftUI
 import UIKit
+import Perception
 
 // MARK: - DynamicBackgroundSettings
 
@@ -593,7 +594,9 @@ struct DynamicAppearancePreferences: Codable, Equatable {
 struct BackgroundSettingsResetHeader: View {
   let action: () -> Void
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     HStack {
       Text("Advanced controls")
         .font(.caption.weight(.semibold))
@@ -612,7 +615,9 @@ struct DynamicSettingsResetButton: View {
   let title: String
   let action: () -> Void
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     Button(action: action) {
       Image(systemName: "arrow.counterclockwise")
         .font(.caption.weight(.semibold))
@@ -634,7 +639,9 @@ struct BackgroundControlSection<Content: View>: View {
     self.content = content()
   }
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     VStack(alignment: .leading, spacing: 10) {
       Label(title, systemImage: sectionIcon)
         .font(.caption.weight(.bold))
@@ -667,7 +674,9 @@ struct DynamicSettingsValueSlider: View {
   let formattedValue: String
   let resetValue: Double?
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     NumberRow(
       title,
       value: $value,
@@ -685,7 +694,9 @@ struct BackgroundControlToggle: View {
   @Binding var value: Bool
   let defaultValue: Bool
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     HStack {
       Toggle(title, isOn: $value)
       DynamicSettingsResetButton(title: title) {
@@ -788,10 +799,12 @@ struct DynamicBackgroundSettingsControls: View {
   private var expandedDynamicSettingsGroups = ""
   private let defaults = DynamicBackgroundMotionSettings()
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     settingsContent
       .onAppear(perform: expandCurrentBackgroundSettings)
-      .onChange(of: dynamicBackground) { _, _ in
+      .onChangeCompat(of: dynamicBackground) { _, _ in
         expandCurrentBackgroundSettings()
       }
   }
@@ -1046,13 +1059,15 @@ struct DynamicParticleSettingsControls: View {
   private var showsARMSX2LogoSettings = true
   private let defaults = DynamicParticleSettings()
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     particleSection
       .onAppear {
         showsBackgroundSettings = true
         migrateLegacyLogoStyleIfNeeded()
       }
-      .onChange(of: dynamicBackground) { _, _ in
+      .onChangeCompat(of: dynamicBackground) { _, _ in
         showsBackgroundSettings = true
       }
   }
@@ -1533,7 +1548,9 @@ struct PlayStation3SplinesSettingsControls: View {
   @Binding var settings: PlayStation3SplinesSettings
   private let defaults = PlayStation3SplinesSettings()
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     BackgroundSettingsResetHeader { settings = defaults }
 
     BackgroundControlSection("Visibility") {
@@ -1617,7 +1634,9 @@ struct PlayStation4ParticlesSettingsControls: View {
   @Binding var settings: PlayStation4ParticlesSettings
   private let defaults = PlayStation4ParticlesSettings()
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     BackgroundSettingsResetHeader { settings = defaults }
 
     BackgroundControlSection("Visibility") {
@@ -1708,7 +1727,9 @@ struct PlayStation4WavesSettingsControls: View {
   @Binding var settings: PlayStation4WavesSettings
   private let defaults = PlayStation4WavesSettings()
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     BackgroundSettingsResetHeader { settings = defaults }
 
     BackgroundControlSection("Visibility") {
@@ -1798,7 +1819,9 @@ struct PlayStationRibbonsSettingsControls: View {
   @Binding var settings: PlayStationRibbonsSettings
   private let defaults = PlayStationRibbonsSettings()
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     BackgroundSettingsResetHeader { settings = defaults }
 
     BackgroundControlSection("Visibility") {
@@ -1892,7 +1915,9 @@ struct PlayStationPortableBlurSettingsControls: View {
   @Binding var settings: PlayStationPortableBlurSettings
   private let defaults = PlayStationPortableBlurSettings()
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     BackgroundSettingsResetHeader { settings = defaults }
 
     BackgroundControlSection("Visibility") {
@@ -1969,7 +1994,9 @@ struct PlayStation3XMBMartSettingsControls: View {
   private var expandedGroups = ""
   private let defaults = PlayStation3XMBSettings()
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
         Spacer()

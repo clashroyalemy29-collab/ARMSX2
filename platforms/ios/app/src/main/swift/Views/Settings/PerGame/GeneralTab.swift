@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 /// Landscape shows these three sections as their own category; portrait puts them at the
 /// top of the panel's root form above the category links. Same content either way, so the
@@ -18,7 +19,9 @@ struct GeneralTab: View {
     let game: ISOEntry
     let settings: SettingsStore
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         PerGameTab(title: settings.localized("General")) {
             PerGameIdentitySection(
                 enabled: enabled,
@@ -69,7 +72,9 @@ struct PerGameLivePreviewSection: View {
         )
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Section {
             Toggle(
                 settings.localized("Preview Changes In-Game"),
@@ -147,7 +152,9 @@ struct PerGameIdentitySection: View {
     let game: ISOEntry
     let settings: SettingsStore
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Section {
             HStack(spacing: 12) {
                 Image(systemName: enabled ? "slider.horizontal.3" : "power")
@@ -191,7 +198,9 @@ struct PerGameOverridesSection: View {
     let savesToRunningGame: Bool
     let settings: SettingsStore
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Section {
             Toggle(settings.localized("Use Per-Game Overrides"), isOn: $enabled)
                 .accessibilityIdentifier("per-game.use-overrides")
@@ -231,7 +240,9 @@ struct PerGameStatusSection: View {
     let statusMessage: String?
     let settings: SettingsStore
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if let statusMessage {
             Section {
                 Text(statusMessage)

@@ -1,6 +1,7 @@
 // Adapted from OrbitKeys-iOS_COMPLETED_FINAL_FIXED.zip for ARMSX2 integration.
 // Dynamic Background sources are intentionally excluded.
 import SwiftUI
+import Perception
 
 // MARK: - OrbitKeys Grid
 
@@ -15,7 +16,9 @@ struct OrbitKeysGridView: View {
     count: 3
   )
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     GeometryReader { proxy in
       let gridSide = min(proxy.size.width, proxy.size.height)
       let cellSide = max(1, (gridSide - 16) / 3)
@@ -148,8 +151,8 @@ struct OrbitKeysGridView: View {
         }
       }
     }
-    .animation(.smooth(duration: 0.3), value: model.mode)
-    .animation(.smooth(duration: 0.3), value: model.keyboardArrangement)
+    .animation(.smoothCompat(duration: 0.3), value: model.mode)
+    .animation(.smoothCompat(duration: 0.3), value: model.keyboardArrangement)
   }
 }
 
@@ -177,7 +180,9 @@ private struct OrbitKeysCellView: View {
   @State private var suppressKeyTap = false
   @Environment(\.uiAccentColour) private var themeAccent
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     GeometryReader { proxy in
       let size = min(proxy.size.width, proxy.size.height)
       let inset = max(17, size * 0.18)
@@ -267,7 +272,7 @@ private struct OrbitKeysCellView: View {
               onSwipe(face)
             }
 
-            withAnimation(.spring(duration: 0.22, bounce: 0.28)) {
+            withAnimation(.springCompat(duration: 0.22, bounce: 0.28)) {
               isSwiping = false
               swipeOffset = .zero
             }
@@ -323,10 +328,10 @@ private struct OrbitKeysCellView: View {
           .scaleEffect(showsGlyph ? 0.62 : 0.18)
           .offset(x: 3, y: -3)
           .opacity(showsGlyph ? 0.9 : 0)
-          .animation(.spring(duration: 0.28, bounce: 0.34), value: isSelected)
-          .animation(.spring(duration: 0.28, bounce: 0.34), value: showsFaceIcons)
+          .animation(.springCompat(duration: 0.28, bounce: 0.34), value: isSelected)
+          .animation(.springCompat(duration: 0.28, bounce: 0.34), value: showsFaceIcons)
           .animation(
-            .spring(duration: 0.28, bounce: 0.34),
+            .springCompat(duration: 0.28, bounce: 0.34),
             value: showsFaceIconsOnAllButtons
           )
           .animation(
@@ -338,11 +343,11 @@ private struct OrbitKeysCellView: View {
       .shadow(color: isPressed ? face.color.opacity(0.9) : .clear, radius: 10)
       .scaleEffect(isPressed ? 1.17 : 1)
       .zIndex(isPressed ? 1 : 0)
-      .animation(.spring(duration: 0.24, bounce: 0.62), value: isPressed)
+      .animation(.springCompat(duration: 0.24, bounce: 0.62), value: isPressed)
       .contentTransition(.numericText())
     }
     .buttonStyle(.plain)
-    .buttonRepeatBehavior(isSelected ? .enabled : .disabled)
+    .buttonRepeatCompat(isSelected)
     .accessibilityLabel("\(face.rawValue), \(key.label)")
     .accessibilityHint("Selects \(key.label) in the \(position.spokenName) group")
   }
@@ -440,7 +445,9 @@ private struct OrbitKeysSelectionDot: View {
   @State private var isExpanded = false
   @State private var pulseTask: Task<Void, Never>?
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     Circle()
       .fill(themeAccent)
       .frame(width: 6, height: 6)
@@ -452,7 +459,7 @@ private struct OrbitKeysSelectionDot: View {
       .onAppear {
         pulse(for: trigger)
       }
-      .onChange(of: trigger) { _, newValue in
+      .onChangeCompat(of: trigger) { _, newValue in
         pulse(for: newValue)
       }
       .onDisappear {
@@ -469,13 +476,13 @@ private struct OrbitKeysSelectionDot: View {
     pulseTask = Task { @MainActor in
       try? await Task.sleep(for: .milliseconds(16))
       guard !Task.isCancelled else { return }
-      withAnimation(.spring(duration: 0.16, bounce: 0.28)) {
+      withAnimation(.springCompat(duration: 0.16, bounce: 0.28)) {
         isExpanded = true
       }
 
       try? await Task.sleep(for: .milliseconds(150))
       guard !Task.isCancelled else { return }
-      withAnimation(.spring(duration: 0.22, bounce: 0.2)) {
+      withAnimation(.springCompat(duration: 0.22, bounce: 0.2)) {
         isExpanded = false
       }
     }
@@ -511,7 +518,9 @@ struct OrbitKeysOrbitalOrbField: View {
   @State private var trailSampleResetTime: TimeInterval?
   @State private var lastSettledPosition: OrbitKeysGridPosition?
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     GeometryReader { proxy in
       TimelineView(
         .animation(
@@ -608,7 +617,7 @@ struct OrbitKeysOrbitalOrbField: View {
       ]
       lastSettledPosition = selectedPosition
     }
-    .onChange(of: targetStickVector) { _, newValue in
+    .onChangeCompat(of: targetStickVector) { _, newValue in
       let now = Date.timeIntervalSinceReferenceDate
       let currentValue = anchorVector(at: now)
       anchorTransitions.append(
@@ -623,10 +632,10 @@ struct OrbitKeysOrbitalOrbField: View {
         anchorTransitions.removeFirst(anchorTransitions.count - 80)
       }
     }
-    .onChange(of: selectedPosition) { _, _ in
+    .onChangeCompat(of: selectedPosition) { _, _ in
       updateOrbitFocusForSelection()
     }
-    .onChange(of: customSelectedAnchor) { _, _ in
+    .onChangeCompat(of: customSelectedAnchor) { _, _ in
       updateOrbitFocusForSelection()
     }
     .task(id: selectedPosition) {
@@ -653,7 +662,7 @@ struct OrbitKeysOrbitalOrbField: View {
       trailSampleResetTime = now
       self.lastSettledPosition = selectedPosition
     }
-    .onChange(of: characterTrigger) { _, _ in
+    .onChangeCompat(of: characterTrigger) { _, _ in
       guard !reduceMotion,
         customCharacterAnchor != nil || (characterFace != nil && characterPosition != nil)
       else {
@@ -1591,7 +1600,9 @@ private struct OrbitKeysGlassOrb: View {
   }
 
   @ViewBuilder
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     if #available(iOS 26.0, *), usesGlass {
       core
         .glassEffect(.regular.tint(color.opacity(0.34)), in: .circle)

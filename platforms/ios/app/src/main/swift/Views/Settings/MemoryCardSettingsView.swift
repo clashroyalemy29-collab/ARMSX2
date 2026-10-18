@@ -4,6 +4,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
+import Perception
 
 struct MemoryCardSettingsView: View {
     @State private var settings = SettingsStore.shared
@@ -22,7 +23,9 @@ struct MemoryCardSettingsView: View {
     private let cardSizes = [8, 16, 32, 64]
     private let pathLikeCharacters: [Character] = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section(settings.localized("Directory")) {
                 Text(ARMSX2Bridge.memoryCardDirectory())
@@ -43,7 +46,7 @@ struct MemoryCardSettingsView: View {
                     selection: $slot1Card,
                     options: cardPickerOptions
                 )
-                .onChange(of: slot1Card) { _, newValue in
+                .onChangeCompat(of: slot1Card) { _, newValue in
                     ARMSX2Bridge.setMemoryCard(name: newValue, forSlot: 1, enabled: !newValue.isEmpty)
                 }
 
@@ -58,7 +61,7 @@ struct MemoryCardSettingsView: View {
                     selection: $slot2Card,
                     options: cardPickerOptions
                 )
-                .onChange(of: slot2Card) { _, newValue in
+                .onChangeCompat(of: slot2Card) { _, newValue in
                     ARMSX2Bridge.setMemoryCard(name: newValue, forSlot: 2, enabled: !newValue.isEmpty)
                 }
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct CPUTab: View {
     @Binding var enabled: Bool
@@ -34,7 +35,9 @@ struct CPUTab: View {
     let globalEEClamp: Int
     let globalVUClamp: Int
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         PerGameTab(title: settings.localized("CPU & Speedhacks")) {
             Section(settings.localized("CPU")) {
                 Picker(settings.localized("EE Core"), selection: $eeCoreType) {

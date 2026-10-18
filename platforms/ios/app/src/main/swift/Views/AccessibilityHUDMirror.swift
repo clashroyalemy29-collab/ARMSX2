@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct AccessibilityHUDMirror: View {
     @State private var battery: Int = -1
@@ -11,7 +12,9 @@ struct AccessibilityHUDMirror: View {
     @State private var lowPower: Bool = false
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .accessibilityElement(children: .ignore)

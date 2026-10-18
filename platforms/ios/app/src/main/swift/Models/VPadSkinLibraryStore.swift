@@ -4,6 +4,7 @@
 import Foundation
 import SwiftUI
 import UIKit
+import Perception
 
 enum VPadSkinSource: String, Codable, Equatable {
     case builtIn
@@ -125,7 +126,7 @@ enum VPadSkinLibraryStoreError: LocalizedError {
     }
 }
 
-@Observable
+@Perceptible
 final class VPadSkinLibraryStore: @unchecked Sendable {
     static let shared = VPadSkinLibraryStore()
     static let schemaVersion = 1

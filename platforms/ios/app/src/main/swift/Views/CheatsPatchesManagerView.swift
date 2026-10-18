@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import Perception
 
 private struct CheatsControllerFocusModifier: ViewModifier {
     let targetID: String
@@ -12,9 +13,11 @@ private struct CheatsControllerFocusModifier: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.uiAccentColour) private var accentColour
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
-            .focusEffectDisabled()
+            .focusEffectDisabledCompat()
             .padding(.horizontal, 7)
             .foregroundStyle(isFocused ? accentColour : Color.primary)
             .background {
@@ -42,7 +45,7 @@ private struct CheatsControllerFocusModifier: ViewModifier {
                 y: isFocused ? 2 : 0
             )
             .animation(
-                reduceMotion ? .linear(duration: 0.1) : .smooth(duration: 0.2),
+                reduceMotion ? .linear(duration: 0.1) : .smoothCompat(duration: 0.2),
                 value: isFocused
             )
     }
@@ -104,7 +107,9 @@ struct CheatsPatchesManagerView: View {
         self.controllerInput = controllerInput
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             ScrollViewReader { proxy in
                 Form {
@@ -146,8 +151,8 @@ struct CheatsPatchesManagerView: View {
                 }
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
-                .onChange(of: controllerTarget) { _, target in
-                    withAnimation(.snappy(duration: 0.22)) {
+                .onChangeCompat(of: controllerTarget) { _, target in
+                    withAnimation(.snappyCompat(duration: 0.22)) {
                         proxy.scrollTo(target, anchor: .center)
                     }
                 }
@@ -194,12 +199,12 @@ struct CheatsPatchesManagerView: View {
                     priority: 500
                 )
             }
-            .onChange(of: controllerInput?.latestEvent) { _, event in
+            .onChangeCompat(of: controllerInput?.latestEvent) { _, event in
                 guard let event else { return }
                 handleControllerCommand(event)
             }
             // A touch drops the capture, so take it back when the pad returns.
-            .onChange(of: controllerInput?.isControllerNavigationEnabled) { _, enabled in
+            .onChangeCompat(of: controllerInput?.isControllerNavigationEnabled) { _, enabled in
                 guard enabled == true else { return }
                 controllerInput?.setNavigationCaptured(
                     true,

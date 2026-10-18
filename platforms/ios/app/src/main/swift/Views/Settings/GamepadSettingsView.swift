@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 private struct PS2Button: Identifiable {
     let id: Int
@@ -124,7 +125,9 @@ struct GamepadSettingsView: View {
         )
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section {
                 linkedPaneRow(
@@ -454,7 +457,9 @@ private struct GamepadLinkedSettingsSheet: View {
         return contentOrder + [Self.doneControllerTargetID]
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             Group {
                 switch pane {
@@ -528,7 +533,9 @@ struct ControllerMacrosSettingsView: View {
 
     @State private var settings = SettingsStore.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             ForEach(ControllerMacroAction.allCases) { action in
                 Section {
@@ -637,7 +644,9 @@ struct LocalMultiplayerSettingsView: View {
 
     @State private var settings = SettingsStore.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section {
                 Picker(settings.localized("Multitap Mode"), selection: $settings.controllerMultitapMode) {

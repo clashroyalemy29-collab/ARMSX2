@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 private struct PerGameShaderCatalogRequest: Identifiable {
     let id = "per-game-shader-catalog"
@@ -20,7 +21,9 @@ struct PerGameShaderSection: View {
     @Environment(\.menuControllerInputRouter) private var controllerInput
     @State private var catalogRequest: PerGameShaderCatalogRequest?
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Section {
             Picker(settings.localized("Shaders"), selection: $chain) {
                 Text(settings.localized("Use Global")).tag(-1)

@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 // MARK: - Visual-only alpha-mask press feedback
 struct ARMSX2SkinMaskPressEffect: View {
@@ -25,7 +26,9 @@ struct ARMSX2SkinMaskPressEffect: View {
         return nil
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if isPressed, let image = maskImage {
             Image(uiImage: image)
                 .resizable()

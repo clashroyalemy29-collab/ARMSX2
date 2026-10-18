@@ -3,7 +3,7 @@
 
 import SwiftUI
 import UIKit
-import Observation
+import Perception
 import GameController
 
 private struct MenuTabIsActiveEnvironmentKey: EnvironmentKey {
@@ -67,12 +67,14 @@ private struct RootControllerAlertCommandListener: View {
     let controllerInput: MenuControllerInputRouter
     let onCommand: (MenuControllerCommand) -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
-            .onChange(of: controllerInput.latestEvent) { _, event in
+            .onChangeCompat(of: controllerInput.latestEvent) { _, event in
                 guard let event,
                       event.captureOwner
                         == MenuControllerNavigationCaptureOwner.rootAlert else {
@@ -160,7 +162,7 @@ private enum RootControllerAlertKind: Equatable {
 /// A question any screen can ask through RootView's prompt window. SwiftUI's own
 /// `.confirmationDialog` is a UIAlertController, which a controller cannot reach.
 @MainActor
-@Observable
+@Perceptible
 final class ControllerPrompt {
     struct Action {
         let title: String
@@ -236,7 +238,9 @@ struct ControllerButtonGlyph: View {
         return GCController.controllers().lazy.compactMap(\.extendedGamepad).first
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if let title = chipTitle {
             Text(title)
                 .font(chipFont)
@@ -325,7 +329,9 @@ struct ControllerHintLine: View {
 
     @Environment(\.uiAccentColour) private var accentColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(spacing: 4) {
             ForEach(parts.indices, id: \.self) { index in
                 if index > 0 { Text("·") }
@@ -362,7 +368,9 @@ struct GameplayControllerShortcutHelpOverlay: View {
     static func homeIndicatorSink(_ bottomInset: CGFloat) -> CGFloat { min(14, bottomInset) }
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if controllerInput?.hasConnectedController == true,
            ControllerButtonGlyph.connectedGamepad != nil {
             shortcutContent
@@ -580,7 +588,9 @@ struct RootView: View {
         return appearance
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         jitAlertContent
             .uiSecondaryForegroundStyle(
                 gameCoverThemePreview.preview == nil
@@ -890,28 +900,28 @@ struct RootView: View {
         .task {
             appState.startAutomaticGameIfNeeded()
         }
-        .onChange(of: appState.automaticGameStartupPending) { _, pending in
+        .onChangeCompat(of: appState.automaticGameStartupPending) { _, pending in
             // Update the destination before releasing the startup music gate;
             // controller-owned JIT prompts are not an emulation Quick Menu.
             menuControllerInput.setMenuActive(menuScreenActive)
             MenuAudioPackManager.shared.setMainInterfaceActive(mainAudioInterfaceActive)
             MenuAudioPackManager.shared.setAutomaticGameStartupActive(pending)
         }
-        .onChange(of: settings.hideIntroStatusBar) { _, hideStatusBar in
+        .onChangeCompat(of: settings.hideIntroStatusBar) { _, hideStatusBar in
             guard showBootSplash else { return }
             appState.hideStatusBar = hideStatusBar
         }
-        .onChange(of: settings.hideMenuStatusBar) { _, hideStatusBar in
+        .onChangeCompat(of: settings.hideMenuStatusBar) { _, hideStatusBar in
             guard !showBootSplash, menuScreenActive else { return }
             appState.hideStatusBar = hideStatusBar
         }
-        .onChange(of: menuScreenActive) { _, active in
+        .onChangeCompat(of: menuScreenActive) { _, active in
             handleMenuScreenActiveChange(active)
         }
-        .onChange(of: mainAudioInterfaceActive) { _, active in
+        .onChangeCompat(of: mainAudioInterfaceActive) { _, active in
             MenuAudioPackManager.shared.setMainInterfaceActive(active)
         }
-        .onChange(of: appState.gameplayLaunchTransition?.id) { previous, current in
+        .onChangeCompat(of: appState.gameplayLaunchTransition?.id) { previous, current in
             if previous != nil, current == nil {
                 MenuAudioPackManager.shared.setMainInterfaceActive(
                     mainAudioInterfaceActive
@@ -920,7 +930,7 @@ struct RootView: View {
                 scheduleGameplayControllerHelpIfReady()
             }
         }
-        .onChange(of: appState.emulationSessionID) { _, _ in
+        .onChangeCompat(of: appState.emulationSessionID) { _, _ in
             scheduleGameplayControllerHelpIfReady()
         }
         .onReceive(
@@ -958,7 +968,7 @@ struct RootView: View {
         ) { _ in
             MenuAudioPackManager.shared.setApplicationActive(false)
         }
-        .onChange(of: activeControllerAlertKind, initial: true) { previous, kind in
+        .onChangeCompat(of: activeControllerAlertKind, initial: true) { previous, kind in
             rootControllerAlertSelection = 0
             updateRootAlertNavigationCapture(isPresented: kind != nil)
             guard let kind, kind != previous else { return }
@@ -975,7 +985,7 @@ struct RootView: View {
                 MenuAudioPackManager.shared.playEvent(.uiToast)
             }
         }
-        .onChange(
+        .onChangeCompat(
             of: appState.pendingJITGameBoot != nil,
             initial: true
         ) { _, isPresented in
@@ -1455,7 +1465,9 @@ private struct GameplayLaunchOverlay: View {
     @State private var zoomed = false
     @State private var fadingOut = false
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geometry in
             let viewport = geometry.frame(in: .global)
             let sourceCenter = CGPoint(
@@ -1546,7 +1558,9 @@ struct FluidGameplayLaunchCard: View {
     let transition: GameplayLaunchTransition
     var showsUnselectedFavoriteIndicator = false
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Group {
             switch transition.style {
             case .list:
@@ -1676,12 +1690,14 @@ private struct MenuTabControllerCommandListener: View {
     let controllerInput: MenuControllerInputRouter
     let onEvent: (MenuControllerInputEvent) -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
-            .onChange(of: controllerInput.latestEvent) { _, event in
+            .onChangeCompat(of: controllerInput.latestEvent) { _, event in
                 guard let event else { return }
                 onEvent(event)
             }
@@ -1689,7 +1705,7 @@ private struct MenuTabControllerCommandListener: View {
 }
 
 @MainActor
-@Observable
+@Perceptible
 private final class MenuControllerTabFocusState {
     var focusedIndex = 0
 
@@ -1972,7 +1988,9 @@ struct MenuTabView: View {
         selectTab(selectedTab + logicalStep)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             Group {
 #if targetEnvironment(macCatalyst)
@@ -2166,10 +2184,9 @@ struct MenuTabView: View {
                     menuLargeTitleMorphActive
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentMargins(
+                .contentMarginsCompat(
                     .bottom,
-                    tabContentBottomMargin,
-                    for: .scrollContent
+                    tabContentBottomMargin
                 )
                 .environment(\.menuTabBarContentMargin, settingsTabBarContentMargin)
                 .safeAreaInset(edge: .bottom, spacing: tabBarContentSpacing) {
@@ -2218,7 +2235,7 @@ struct MenuTabView: View {
                     .onAppear {
                         menuViewportSize = proxy.size
                     }
-                    .onChange(of: proxy.size) { _, size in
+                    .onChangeCompat(of: proxy.size) { _, size in
                         guard menuViewportSize != size else { return }
                         menuViewportSize = size
                     }
@@ -2252,13 +2269,13 @@ struct MenuTabView: View {
             backgroundHost.reactivateForMenu(isAvailable: settings.hasCustomBackground)
             backgroundHost.setPresentationVisible(selectedTabShowsBackground)
         }
-        .onChange(of: settings.hasCustomBackground) { _, hasBackground in
+        .onChangeCompat(of: settings.hasCustomBackground) { _, hasBackground in
             backgroundHost.setMenuBackgroundAvailable(hasBackground)
         }
-        .onChange(of: settings.dynamicBackgroundsEnabled) { _, _ in
+        .onChangeCompat(of: settings.dynamicBackgroundsEnabled) { _, _ in
             backgroundHost.setMenuBackgroundAvailable(settings.hasCustomBackground)
         }
-        .onChange(of: selectedTabShowsBackground) { _, showsBackground in
+        .onChangeCompat(of: selectedTabShowsBackground) { _, showsBackground in
             backgroundHost.setPresentationVisible(showsBackground)
         }
         .onDisappear {
@@ -2426,7 +2443,9 @@ private struct ControllerTabBarOrbOverlay: View {
     let permitsSegmentFallback: Bool
     let selection: Int
     let controllerInput: MenuControllerInputRouter
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { proxy in
             if controllerInput.hasConnectedController,
                controllerInput.isControllerNavigationEnabled,
@@ -2450,14 +2469,14 @@ private struct ControllerTabBarOrbOverlay: View {
                                 selectedIndex: selection
                             )
                         }
-                        .onChange(of: windowFrame) { _, next in
+                        .onChangeCompat(of: windowFrame) { _, next in
                             controllerInput.updateTabBarOrbFocusFrame(
                                 next,
                                 focusedIndex: focusedIndex,
                                 selectedIndex: selection
                             )
                         }
-                        .onChange(of: selection) { _, next in
+                        .onChangeCompat(of: selection) { _, next in
                             controllerInput.updateTabBarOrbFocusFrame(
                                 windowFrame,
                                 focusedIndex: focusedIndex,
@@ -2542,7 +2561,9 @@ private struct ControllerFocusedMenuTabBar: View {
     }
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Group {
             if #available(iOS 26.0, *) {
                 NativeMenuTabBar(
@@ -2631,7 +2652,9 @@ private struct LegacyGlassMenuTabBar: View {
         UIDevice.current.userInterfaceIdiom == .pad ? 360 : 276
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(spacing: 0) {
             ForEach(systemImages.indices, id: \.self) { index in
                 let controllerFocused = controllerFocusedIndex == index
@@ -2694,7 +2717,7 @@ private struct LegacyGlassMenuTabBar: View {
                     }
                 }
                 .buttonStyle(LegacyGlassTabButtonStyle())
-                .focusEffectDisabled()
+                .focusEffectDisabledCompat()
                 .accessibilityLabel(
                     titles.indices.contains(index) ? titles[index] : ""
                 )
@@ -2739,7 +2762,9 @@ private struct OriginalLegacyGlassMenuTabBar: View {
         blendDuration: 0.18
     )
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(spacing: 0) {
             ForEach(systemImages.indices, id: \.self) { index in
                 Button {
@@ -4312,7 +4337,9 @@ private struct SafeAreaProtectedMenuTabContent<Content: View>: View {
         self.content = content()
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         // Pre-iOS 26, SwiftUI reports no horizontal safe-area inset for a TabView page in
         // landscape, so a bare list slides under the notch and we pad it manually from the
         // key-window insets. On iOS 26+ SwiftUI gets it right, and padding again would
@@ -4341,7 +4368,7 @@ private struct SafeAreaProtectedMenuTabContent<Content: View>: View {
                 .padding(.leading, layoutDirection == .rightToLeft ? insets.right : insets.left)
                 .padding(.trailing, layoutDirection == .rightToLeft ? insets.left : insets.right)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onChange(of: geometry.size) { _, _ in
+                .onChangeCompat(of: geometry.size) { _, _ in
                     safeAreaInsets = KeyWindowSafeArea.horizontalInsets()
                 }
         }
@@ -4398,7 +4425,9 @@ private struct CatalystMenuTabBar: View {
         (2, "Settings"),
     ]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(spacing: 2) {
             ForEach(tabs, id: \.0) { tab in
                 Button {

@@ -4,6 +4,7 @@
 import SwiftUI
 import ImageIO
 import UIKit
+import Perception
 
 /// Decodes and animates a multi-frame image (GIF, APNG, animated WebP when
 /// ImageIO supports it) for the library background. Frames are decoded lazily
@@ -20,7 +21,9 @@ struct AnimatedLibraryBackgroundView: View {
     @State private var loadFailed = false
     @State private var frameRates = UIFrameRateSettings.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Group {
             if reduceMotion || frames.isEmpty {
                 staticFirstFrame

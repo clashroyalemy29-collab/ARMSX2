@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 // MARK: - PaletteGradientField
 
@@ -12,7 +13,9 @@ struct PaletteGradientField: View {
   let endPoint: UnitPoint
   let curvature: Double
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     if abs(curvature) < 0.001 {
       LinearGradient(
         colors: colors,
@@ -200,7 +203,9 @@ private struct PaletteGradientEditor: View {
   private let minimumStopCount = 2
   private let maximumStopCount = 8
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 10) {
         Text(title)
@@ -335,7 +340,9 @@ struct ThemePaletteControls: View {
   @State private var draftDarkEffectColors = [Color.black, Color.black]
   @State private var isDraftDarkEffectEnabled = true
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     VStack(alignment: .leading, spacing: 20) {
       paletteSection
       customColorSection
@@ -1093,7 +1100,9 @@ struct ThemePaletteEditorHeader: View {
   let redo: () -> Void
   let apply: () -> Void
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     HStack(spacing: 10) {
       Text("Colours")
         .font(.title2.weight(.bold))
@@ -1137,7 +1146,9 @@ struct ThemePaletteEditorSliderReadout: View {
   let title: String
   let value: String
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     VStack {
       HStack {
         Spacer()
@@ -1226,13 +1237,15 @@ struct ThemePaletteEditor: View {
     self.onSaveAppearance = onSaveAppearance
   }
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     editorSurface
       .preferredColorScheme(.dark)
-      .presentationBackground(.clear)
+      .presentationBackgroundClearCompat()
       .presentationDragIndicator(isShowingBackgroundOnly ? .hidden : .visible)
       .onAppear(perform: prepareEditor)
-      .onChange(of: currentEditorSnapshot) { oldSnapshot, newSnapshot in
+      .onChangeCompat(of: currentEditorSnapshot) { oldSnapshot, newSnapshot in
         handleEditorSnapshotChange(from: oldSnapshot, to: newSnapshot)
       }
       .onDisappear(perform: tearDownEditor)
@@ -1288,7 +1301,7 @@ struct ThemePaletteEditor: View {
         ScrollView {
           editorSections
         }
-        .onChange(of: scrollToTopRequest) { _, _ in
+        .onChangeCompat(of: scrollToTopRequest) { _, _ in
           var transaction = Transaction(animation: nil)
           transaction.disablesAnimations = true
           withTransaction(transaction) {

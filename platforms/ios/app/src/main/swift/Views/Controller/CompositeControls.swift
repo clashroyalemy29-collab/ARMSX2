@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 // MARK: - Composite D-pad (8-way diagonals)
 struct CompositeDPadFaceInfo {
@@ -225,7 +226,9 @@ struct CompositeDPadView: View {
     @Environment(\.padOpacity) private var padOpacity
     @Environment(\.padUsesFullSkin) private var padUsesFullSkin
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             if let frame = backgroundFrame {
                 let image = directional == nil
@@ -366,7 +369,9 @@ private struct PSButtonFace: View {
         PadLayoutMetrics.touchLength(baseLength: baseSize, hitScale: hitScaleY)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         centeredButtonFace
     }
 
@@ -535,7 +540,9 @@ struct CompositeFaceView: View {
     @Environment(\.padOpacity) private var padOpacity
     @Environment(\.padUsesFullSkin) private var padUsesFullSkin
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             CompositeFaceTouchSurface { offsets in
                 var next: Set<ARMSX2PadButton> = []

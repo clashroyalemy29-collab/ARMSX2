@@ -4,6 +4,7 @@
 import SwiftUI
 import AVKit
 import ImageIO
+import Perception
 
 struct BackgroundContainerView: View {
     @State private var settings = SettingsStore.shared
@@ -46,7 +47,9 @@ struct BackgroundContainerView: View {
         return preferences
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             if isRenderingEnabled && isPresentationActive {
                 if settings.dynamicBackgroundsEnabled {
@@ -161,7 +164,9 @@ private struct StaticLibraryBackgroundImageView: View {
         "\(url.path)|\(Int(size.width))x\(Int(size.height))"
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geometry in
             if let image {
                 fitted(Image(uiImage: image))

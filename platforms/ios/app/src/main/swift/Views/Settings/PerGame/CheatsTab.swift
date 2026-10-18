@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct CheatsTab: View {
     @Binding var enabled: Bool
@@ -14,7 +15,9 @@ struct CheatsTab: View {
     let savesToRunningGame: Bool
     let settings: SettingsStore
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         PerGameTab(title: settings.localized("Cheats & Patches")) {
             Section(settings.localized("Cheats & Patches")) {
                 Button {

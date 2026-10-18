@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct ShaderSettingsView: View {
     @State private var settings = SettingsStore.shared
@@ -12,7 +13,9 @@ struct ShaderSettingsView: View {
     @State private var controllerTargetOrder: [String] = []
     @State private var ownsFrozenBackground = false
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ShaderWorkspaceView(
             enabled: $settings.shaderChainEnabled,
             presetRef: $settings.shaderChainPresetRef,
@@ -30,7 +33,7 @@ struct ShaderSettingsView: View {
         .navigationBarBackButtonHidden(detailPresented)
         .toolbar {
             if detailPresented {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button {
                         detailPresented = false
                     } label: {
@@ -48,7 +51,7 @@ struct ShaderSettingsView: View {
                 }
             }
         }
-        .animation(.smooth(duration: 0.28), value: controllerTargetOrder)
+        .animation(.smoothCompat(duration: 0.28), value: controllerTargetOrder)
         .onAppear {
             guard !ownsFrozenBackground else { return }
             ownsFrozenBackground = true

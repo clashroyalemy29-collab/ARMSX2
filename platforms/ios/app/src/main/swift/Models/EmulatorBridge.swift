@@ -4,6 +4,7 @@
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
+import Perception
 #endif
 
 @MainActor
@@ -85,7 +86,7 @@ enum EmulatorState: String {
     case suspended = "Suspended"
 }
 
-@Observable
+@Perceptible
 final class EmulatorBridge: @unchecked Sendable {
     static let shared = EmulatorBridge()
 
@@ -95,10 +96,10 @@ final class EmulatorBridge: @unchecked Sendable {
     var biosName: String = "Unknown"
     var buildVersion: String = ""
 
-    @ObservationIgnored private var virtualRightTouchX: Float = 0
-    @ObservationIgnored private var virtualRightTouchY: Float = 0
-    @ObservationIgnored private var virtualRightMotionX: Float = 0
-    @ObservationIgnored private var virtualRightMotionY: Float = 0
+    @PerceptionIgnored private var virtualRightTouchX: Float = 0
+    @PerceptionIgnored private var virtualRightTouchY: Float = 0
+    @PerceptionIgnored private var virtualRightMotionX: Float = 0
+    @PerceptionIgnored private var virtualRightMotionY: Float = 0
 
     private init() {
         biosName = ARMSX2Bridge.biosName()

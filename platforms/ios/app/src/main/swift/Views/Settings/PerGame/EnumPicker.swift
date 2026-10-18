@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 /// Picker backed by a fixed list of `(value, title)` options.
 ///
@@ -27,7 +28,9 @@ struct EnumPicker<Selection: Hashable, Label: View>: View {
         self.label = label()
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Picker(selection: $selection) {
             ForEach(options, id: \.id) { option in
                 Text(option.title).tag(option.id)

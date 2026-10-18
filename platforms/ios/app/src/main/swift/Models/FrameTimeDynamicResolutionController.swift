@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import Foundation
+import Perception
 
 /// Bumps `upscale_multiplier` in 0.25 steps based on the core's frame-time
 /// history. Polls roughly every 500 ms and changes no more often than that.
@@ -15,7 +16,7 @@ import Foundation
 /// thread). A per-game INI value overrides the global toggle for the running
 /// game.
 @MainActor
-@Observable
+@Perceptible
 final class FrameTimeDynamicResolutionController {
     static let shared = FrameTimeDynamicResolutionController()
 
@@ -55,16 +56,16 @@ final class FrameTimeDynamicResolutionController {
 
     /// Max clamp — captured from the current UpscaleMultiplier on enable, and
     /// raised if the user raises it manually; never lowered otherwise.
-    @ObservationIgnored private var maxMultiplier: Float = 1.0
-    @ObservationIgnored private var lastChangeAt: Date = .distantPast
-    @ObservationIgnored private var lastObservedMultiplier: Float = 1.0
+    @PerceptionIgnored private var maxMultiplier: Float = 1.0
+    @PerceptionIgnored private var lastChangeAt: Date = .distantPast
+    @PerceptionIgnored private var lastObservedMultiplier: Float = 1.0
     /// Used by the manual-change detector: if the observed value moves by
     /// more than a step from this and we didn't write recently, the user
     /// changed it.
-    @ObservationIgnored private var lastWrittenValue: Float = 1.0
-    @ObservationIgnored private var lastWriteAt: Date = .distantPast
-    @ObservationIgnored private var pollTimer: Timer?
-    @ObservationIgnored private var suspendedForEmulationOnlyMode = false
+    @PerceptionIgnored private var lastWrittenValue: Float = 1.0
+    @PerceptionIgnored private var lastWriteAt: Date = .distantPast
+    @PerceptionIgnored private var pollTimer: Timer?
+    @PerceptionIgnored private var suspendedForEmulationOnlyMode = false
 
     private init() {}
 

@@ -1,0 +1,143 @@
+name: iOS 16+ unsigned IPA
+
+# Builds the ARMSX2 iOS app for iOS 16.0 and later and publishes an UNSIGNED IPA
+# as a downloadable workflow artifact. Everything runs on GitHub's macOS servers,
+# so it can be started from the GitHub website in Safari on an iPhone:
+#   Actions tab -> "iOS 16+ unsigned IPA" -> Run workflow.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - ios16-support
+    paths:
+      - 'platforms/ios/**'
+      - 'pcsx2/**'
+      - 'common/**'
+      - '3rdparty/**'
+      - '.github/workflows/ios16_ipa.yml'
+
+concurrency:
+  group: ios16-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_ios:
+    name: Build unsigned IPA (iOS 16.0+)
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      EXPECTED_MIN_IOS: "16.0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Same Xcode the repository's macOS workflow uses (macos_build.yml).
+      - name: Use Xcode 26.5
+        run: sudo xcode-select -s /Applications/Xcode_26.5.app
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          swift --version
+          cmake --version || true
+          ruby --version
+
+      - name: Install Metal Toolchain
+        run: |
+          for i in {1..5}; do
+            if xcrun metal -v; then break; fi
+            xcodebuild -downloadComponent MetalToolchain
+          done
+
+      - name: Install CMake if missing
+        run: |
+          if ! command -v cmake >/dev/null 2>&1; then
+            HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_ANALYTICS=1 brew install cmake
+          fi
+
+      # librashader (RetroArch shader chains) is a Rust static library.
+      - name: Install Rust target for iOS
+        run: |
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+            export PATH="$HOME/.cargo/bin:$PATH"
+          fi
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-apple-ios
+          cargo --version
+          rustc --version
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-ios-${{ hashFiles('platforms/ios/app/src/main/cpp/3rdparty/librashader/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-ios-
+
+      - name: Cache Swift packages (swift-perception, swift-syntax)
+        uses: actions/cache@v6
+        with:
+          path: platforms/ios/build-ios-xcode/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('platforms/ios/scripts/add-swift-packages.rb') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      # Generates the Xcode project with CMake, adds swift-perception to it,
+      # builds the Release app for iphoneos and zips Payload/ARMSX2iOS.app into an
+      # unsigned IPA (no signing identity is passed, see build-ios-ipa.sh).
+      - name: Build unsigned IPA
+        working-directory: platforms/ios
+        run: |
+          set -o pipefail
+          ./scripts/build-ios-ipa.sh
+
+      - name: Verify the IPA targets iOS 16.0
+        working-directory: platforms/ios
+        run: |
+          set -euo pipefail
+          IPA="build-ios-xcode/ARMSX2-iOS-unsigned.ipa"
+          test -f "$IPA"
+          rm -rf verify && mkdir verify
+          unzip -q "$IPA" -d verify
+          APP="verify/Payload/ARMSX2iOS.app"
+          PLIST_MIN="$(/usr/libexec/PlistBuddy -c 'Print :MinimumOSVersion' "$APP/Info.plist")"
+          BIN_MIN="$(xcrun vtool -show-build "$APP/ARMSX2iOS" | awk '/minos/ {print $2; exit}')"
+          echo "Info.plist MinimumOSVersion = $PLIST_MIN"
+          echo "Mach-O minos               = $BIN_MIN"
+          if [ "$PLIST_MIN" != "$EXPECTED_MIN_IOS" ] || [ "$BIN_MIN" != "$EXPECTED_MIN_IOS" ]; then
+            echo "::error::The IPA does not target iOS $EXPECTED_MIN_IOS"
+            exit 1
+          fi
+          {
+            echo "### IPA check"
+            echo "- Info.plist MinimumOSVersion: \`$PLIST_MIN\`"
+            echo "- Mach-O minos: \`$BIN_MIN\`"
+            echo "- IPA size: $(du -h "$IPA" | cut -f1)"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v7
+        with:
+          name: ARMSX2-iOS16-unsigned-ipa
+          path: platforms/ios/build-ios-xcode/ARMSX2-iOS-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      # Uploaded even when the build fails, so the compiler errors can be read.
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: xcodebuild-log
+          path: platforms/ios/build-ios-xcode/xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 14

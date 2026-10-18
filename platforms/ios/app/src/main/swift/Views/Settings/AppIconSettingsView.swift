@@ -4,6 +4,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
+import Perception
 
 struct AppIconOption: Identifiable, Hashable {
     // nil selects the primary icon, anything else is a CFBundleAlternateIcons key
@@ -69,7 +70,9 @@ struct AppIconSettingsView: View {
 
     private var inExportMode: Bool { AppInstallEnvironment.isLikelyExternalContainer }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             if inExportMode {
                 Section {

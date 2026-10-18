@@ -4,6 +4,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
+import Perception
 
 struct BIOSLibraryEntry: Identifiable, Equatable, Sendable {
     let fileName: String
@@ -28,16 +29,16 @@ struct BIOSLibraryEntry: Identifiable, Equatable, Sendable {
 }
 
 @MainActor
-@Observable
+@Perceptible
 final class BIOSLibraryState {
     static let shared = BIOSLibraryState()
 
     private(set) var entries: [BIOSLibraryEntry] = []
     private(set) var defaultBIOS = ""
     private(set) var hasLoaded = false
-    @ObservationIgnored private var refreshTask: Task<Void, Never>?
-    @ObservationIgnored private var needsRefresh = true
-    @ObservationIgnored private var refreshCompletions:
+    @PerceptionIgnored private var refreshTask: Task<Void, Never>?
+    @PerceptionIgnored private var needsRefresh = true
+    @PerceptionIgnored private var refreshCompletions:
         [([BIOSLibraryEntry]) -> Void] = []
 
     private init() {}
@@ -109,8 +110,10 @@ private struct BIOSToolbarFocusReporter: ViewModifier {
     @Binding var focusedID: String?
     @Environment(\.controllerAccessibilityTargetFocused) private var isFocused
 
-    func body(content: Content) -> some View {
-        content.onChange(of: isFocused, initial: true) { _, focused in
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
+        content.onChangeCompat(of: isFocused, initial: true) { _, focused in
             if focused {
                 focusedID = id
             } else if focusedID == id {
@@ -124,12 +127,14 @@ private struct BIOSPromptCommandListener: View {
     let controllerInput: MenuControllerInputRouter
     let onCommand: (MenuControllerCommand) -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
-            .onChange(of: controllerInput.latestEvent) { _, event in
+            .onChangeCompat(of: controllerInput.latestEvent) { _, event in
                 guard let event,
                       event.captureOwner
                         == MenuControllerNavigationCaptureOwner.biosPrompt else {
@@ -141,7 +146,9 @@ private struct BIOSPromptCommandListener: View {
 }
 
 private struct BIOSLoadingView: View {
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ProgressView()
             .controlSize(.large)
             .accessibilityLabel("Loading BIOS")
@@ -232,7 +239,9 @@ struct BIOSListView: View {
             : bioses.map(\.filePath)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         OptionalMenuNavigationStack(embedded: embeddedInMenuNavigation) {
             ZStack {
                 if backgroundConfigured {
@@ -271,13 +280,13 @@ struct BIOSListView: View {
                                     )
                             }
                         }
-                        .contentMargins(.top, 0, for: .scrollContent)
+                        .contentMarginsCompat(.top, 0)
                         // The persistent tab bar already shortens this
                         // viewport through safeAreaInset. Do not inherit the
                         // menu-wide bottom scroll margin as an additional
                         // controller-navigable blank region.
-                        .contentMargins(.bottom, 0, for: .scrollContent)
-                        .scrollBounceBehavior(.always)
+                        .contentMarginsCompat(.bottom, 0)
+                        .scrollBounceAlwaysCompat()
                     }
                 } else {
                     List {
@@ -301,10 +310,10 @@ struct BIOSListView: View {
                                 .gameCardTintMenuBackgroundListRow(backgroundActive)
                         }
                     }
-                    .contentMargins(.top, 0, for: .scrollContent)
-                    .contentMargins(.bottom, 0, for: .scrollContent)
+                    .contentMarginsCompat(.top, 0)
+                    .contentMarginsCompat(.bottom, 0)
                     .scrollContentBackground(backgroundActive ? .hidden : .automatic)
-                    .scrollBounceBehavior(.always)
+                    .scrollBounceAlwaysCompat()
 #if targetEnvironment(macCatalyst)
                     .listStyle(.inset)
 #endif
@@ -343,7 +352,7 @@ struct BIOSListView: View {
             )
             .toolbar {
                 if !embeddedInMenuNavigation || ownsEmbeddedMenuToolbar {
-                ToolbarItem(id: "menu.bootBIOS", placement: .topBarLeading) {
+                ToolbarItem(id: "menu.bootBIOS", placement: .navigationBarLeading) {
                     Button(action: performBootBIOSAction) {
                         Text(settings.localized("Boot BIOS"))
                             .font(.callout.weight(.semibold))
@@ -368,7 +377,7 @@ struct BIOSListView: View {
                     )
                     .fixedSize()
                 }
-                ToolbarItem(id: "menu.import", placement: .topBarTrailing) {
+                ToolbarItem(id: "menu.import", placement: .navigationBarTrailing) {
                     Menu {
                         Button {
                             presentMenuPanel("bios_import") {
@@ -410,7 +419,7 @@ struct BIOSListView: View {
                         action: openBIOSImporter
                     )
                 }
-                ToolbarItem(id: "menu.refresh", placement: .topBarTrailing) {
+                ToolbarItem(id: "menu.refresh", placement: .navigationBarTrailing) {
                     Button { loadBIOSes() } label: {
                         Image(systemName: "arrow.clockwise")
                             .menuToolbarMorphElement("refresh")
@@ -488,12 +497,12 @@ struct BIOSListView: View {
                 scheduleBIOSRefresh(after: .milliseconds(0))
             }
         }
-        .onChange(of: menuTabIsActive) { _, isActive in
+        .onChangeCompat(of: menuTabIsActive) { _, isActive in
             if isActive {
                 scheduleBIOSRefresh(after: .milliseconds(0))
             }
         }
-        .onChange(of: activePrompt) { previous, prompt in
+        .onChangeCompat(of: activePrompt) { previous, prompt in
             promptSelectedIndex = 0
             updatePromptCapture()
             guard let prompt, prompt != previous else { return }
@@ -786,7 +795,7 @@ struct BIOSListView: View {
             }
             .buttonStyle(.plain)
             .focusable(false)
-            .focusEffectDisabled()
+            .focusEffectDisabledCompat()
             .accessibilityElement(children: .combine)
             .accessibilityLabel(settings.localized("Import BIOS"))
             .controllerAccessibilityActionTarget(

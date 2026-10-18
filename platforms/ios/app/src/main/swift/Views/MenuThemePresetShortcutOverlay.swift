@@ -3,6 +3,7 @@
 
 import SwiftUI
 import Foundation
+import Perception
 
 /// The toast uses the same travel curve as the focus box without adding a
 /// second display link or animating the entire theme transaction.
@@ -56,7 +57,9 @@ struct MenuThemePresetShortcutOverlay: View {
         ))
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             if let pendingChange {
                 ControllerNavigationAlert(
@@ -119,7 +122,7 @@ struct MenuThemePresetShortcutOverlay: View {
         .allowsHitTesting(pendingChange != nil)
         .accessibilityElement(children: .combine)
         .animation(focusAnimation, value: presentation)
-        .onChange(of: controllerInput.latestThemePresetRequest) { _, request in
+        .onChangeCompat(of: controllerInput.latestThemePresetRequest) { _, request in
             guard let request, isEnabled, controllerInput.canChangeMainMenuTheme else { return }
             let selections = themeGallery.orderedSelections
             let current = themeGallery.currentSelection(for: settings)
@@ -149,7 +152,7 @@ struct MenuThemePresetShortcutOverlay: View {
             )
             controllerInput.playFeedback(.contextMenu)
         }
-        .onChange(of: controllerInput.latestEvent) { _, event in
+        .onChangeCompat(of: controllerInput.latestEvent) { _, event in
             guard let event,
                   event.captureOwner
                     == MenuControllerNavigationCaptureOwner.themePresetShortcut,
@@ -164,7 +167,7 @@ struct MenuThemePresetShortcutOverlay: View {
                 presentation = nil
             } catch { }
         }
-        .onChange(of: isEnabled) { _, enabled in
+        .onChangeCompat(of: isEnabled) { _, enabled in
             if !enabled {
                 presentation = nil
                 cancelPendingChange(playsFeedback: false)
@@ -180,7 +183,7 @@ struct MenuThemePresetShortcutOverlay: View {
                     showsThemeNameKeyboard = false
                 }
             )
-            .presentationBackground(.clear)
+            .presentationBackgroundClearCompat()
             .appStatusBarHidden()
         }
         .controllerPrompt(

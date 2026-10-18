@@ -2,6 +2,7 @@
 // The original project's Dynamic Background types are deliberately omitted.
 
 import SwiftUI
+import Perception
 
 extension OrbitKeysFaceButton {
   var color: Color {
@@ -129,7 +130,9 @@ private struct OrbitKeysGlassSurfaceModifier: ViewModifier {
   let cornerRadius: CGFloat
 
   @ViewBuilder
-  func body(content: Content) -> some View {
+  func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+  @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
     if #available(iOS 26.0, *) {
       content
         .glassEffect(
@@ -156,7 +159,9 @@ private struct OrbitKeysGlassStyleModifier<Surface: Shape>: ViewModifier {
   let opaqueStrokeOpacity: Double
   let lineWidth: CGFloat
 
-  func body(content: Content) -> some View {
+  func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+  @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
     let glass = OrbitKeysGlassValues(
       clearGlassLevel: clearGlassLevel,
       clearFillOpacity: clearFillOpacity,
@@ -190,7 +195,9 @@ private struct OrbitKeysThemeSurfaceModifier: ViewModifier {
   let legacyLineWidth: CGFloat
 
   @ViewBuilder
-  func body(content: Content) -> some View {
+  func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+  @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
     if usesLegacyTheme {
       content
         .orbitKeysGlassSurface(
@@ -217,7 +224,9 @@ private struct OrbitKeysKeySurfaceModifier: ViewModifier {
   let cornerRadius: CGFloat
 
   @ViewBuilder
-  func body(content: Content) -> some View {
+  func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+  @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
     if usesLegacyTheme {
       content
         .background {
@@ -282,7 +291,9 @@ struct OrbitKeysFaceGlyph: View {
     color ?? face.color
   }
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     Group {
       switch face {
       case .square:

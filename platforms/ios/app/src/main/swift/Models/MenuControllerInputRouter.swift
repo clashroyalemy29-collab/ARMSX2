@@ -4,7 +4,7 @@
 import Foundation
 @preconcurrency import GameController
 import CoreHaptics
-import Observation
+import Perception
 import SwiftUI
 import UIKit
 
@@ -414,11 +414,11 @@ extension EnvironmentValues {
 /// individual D-pad handlers, so this deliberately uses only each profile's
 /// aggregate valueChangedHandler.
 @MainActor
-@Observable
+@Perceptible
 final class MenuControllerInputRouter {
     /// While a save-state Undo is on screen, the macro chord also works over menus.
     var saveStateUndoPending = false
-    @ObservationIgnored private var undoChordHeld = false
+    @PerceptionIgnored private var undoChordHeld = false
     private(set) var saveStateUndoRequest: UInt64 = 0
     private struct NavigationSessionTarget {
         let scopeKey: String
@@ -500,78 +500,78 @@ final class MenuControllerInputRouter {
     private(set) var navigationZone: MenuControllerNavigationZone = .library
     private(set) var pressedFaceButton: MenuControllerFaceButton?
 
-    @ObservationIgnored private var sequence: UInt64 = 0
-    @ObservationIgnored private var connectObserver: NSObjectProtocol?
-    @ObservationIgnored private var disconnectObserver: NSObjectProtocol?
-    @ObservationIgnored private var registeredExtendedProfiles = Set<ObjectIdentifier>()
-    @ObservationIgnored private var registeredMicroProfiles = Set<ObjectIdentifier>()
-    @ObservationIgnored private var heldDirections: [ObjectIdentifier: MenuControllerCommand] = [:]
-    @ObservationIgnored private var directionalHoldStartTimes: [
+    @PerceptionIgnored private var sequence: UInt64 = 0
+    @PerceptionIgnored private var connectObserver: NSObjectProtocol?
+    @PerceptionIgnored private var disconnectObserver: NSObjectProtocol?
+    @PerceptionIgnored private var registeredExtendedProfiles = Set<ObjectIdentifier>()
+    @PerceptionIgnored private var registeredMicroProfiles = Set<ObjectIdentifier>()
+    @PerceptionIgnored private var heldDirections: [ObjectIdentifier: MenuControllerCommand] = [:]
+    @PerceptionIgnored private var directionalHoldStartTimes: [
         ObjectIdentifier: TimeInterval
     ] = [:]
-    @ObservationIgnored private var lastDirectionEdges: [
+    @PerceptionIgnored private var lastDirectionEdges: [
         ObjectIdentifier: (command: MenuControllerCommand, timestamp: TimeInterval)
     ] = [:]
     /// Some wireless controllers expose one physical D-pad edge through both
     /// GameController and a keyboard-style HID path. Coalesce that duplicate
     /// globally while leaving intentional held-repeat events untouched.
-    @ObservationIgnored private var lastPublishedDirectionalEdge: (
+    @PerceptionIgnored private var lastPublishedDirectionalEdge: (
         command: MenuControllerCommand,
         timestamp: TimeInterval
     )?
-    @ObservationIgnored private var directionSamplingTasks: [
+    @PerceptionIgnored private var directionSamplingTasks: [
         ObjectIdentifier: Task<Void, Never>
     ] = [:]
-    @ObservationIgnored private var libraryEntrySuppressedEventSequence: UInt64?
-    @ObservationIgnored private var pendingTabBarOrbSourceFrame: CGRect?
-    @ObservationIgnored private var pressedButtons: [ObjectIdentifier: Set<Button>] = [:]
-    @ObservationIgnored private var emulationMacroLatches: [
+    @PerceptionIgnored private var libraryEntrySuppressedEventSequence: UInt64?
+    @PerceptionIgnored private var pendingTabBarOrbSourceFrame: CGRect?
+    @PerceptionIgnored private var pressedButtons: [ObjectIdentifier: Set<Button>] = [:]
+    @PerceptionIgnored private var emulationMacroLatches: [
         ObjectIdentifier: Set<ControllerMacroAction>
     ] = [:]
-    @ObservationIgnored private var emulationMacroRepeatTasks: [
+    @PerceptionIgnored private var emulationMacroRepeatTasks: [
         ObjectIdentifier: [ControllerMacroAction: Task<Void, Never>]
     ] = [:]
-    @ObservationIgnored private var navigationSessions: [UUID: NavigationSessionTarget] = [:]
+    @PerceptionIgnored private var navigationSessions: [UUID: NavigationSessionTarget] = [:]
     /// The session the router hands input to. Nil while a screen captures input itself, as the
     /// pause menu does, and then every session keeps drawing its own ring.
     private(set) var navigationInputSessionID: UUID?
-    @ObservationIgnored private var rememberedNavigationFocusKeys: [String: String] = [:]
-    @ObservationIgnored private var navigationSessionSequence: UInt64 = 0
-    @ObservationIgnored private var pendingNavigationSessionCommands: [
+    @PerceptionIgnored private var rememberedNavigationFocusKeys: [String: String] = [:]
+    @PerceptionIgnored private var navigationSessionSequence: UInt64 = 0
+    @PerceptionIgnored private var pendingNavigationSessionCommands: [
         UUID: PendingNavigationSessionCommand
     ] = [:]
-    @ObservationIgnored private var pendingNavigationSessionEntryRequest:
+    @PerceptionIgnored private var pendingNavigationSessionEntryRequest:
         PendingNavigationSessionEntryRequest?
-    @ObservationIgnored private var navigationSessionEntryTask: Task<Void, Never>?
-    @ObservationIgnored private var launchInputInterceptor: (@MainActor () -> Void)?
-    @ObservationIgnored private var manuallyCapturedNavigation = false
-    @ObservationIgnored private var manualNavigationCaptures: [
+    @PerceptionIgnored private var navigationSessionEntryTask: Task<Void, Never>?
+    @PerceptionIgnored private var launchInputInterceptor: (@MainActor () -> Void)?
+    @PerceptionIgnored private var manuallyCapturedNavigation = false
+    @PerceptionIgnored private var manualNavigationCaptures: [
         String: ManualNavigationCapture
     ] = [:]
-    @ObservationIgnored private var manualNavigationCaptureSequence: UInt64 = 0
-    @ObservationIgnored private var repeatTasks: [
+    @PerceptionIgnored private var manualNavigationCaptureSequence: UInt64 = 0
+    @PerceptionIgnored private var repeatTasks: [
         ObjectIdentifier: Task<Void, Never>
     ] = [:]
-    @ObservationIgnored private var themePresetRepeatTasks: [
+    @PerceptionIgnored private var themePresetRepeatTasks: [
         ObjectIdentifier: [Button: Task<Void, Never>]
     ] = [:]
-    @ObservationIgnored private var touchThemePresetShortcutSuppressedUntil = 0.0
-    @ObservationIgnored private var rightStickVector = MenuControllerScrollVector.zero
-    @ObservationIgnored private(set) var lastRightStickScrollDirection: MenuControllerCommand?
-    @ObservationIgnored private(set) var isRepeatingDirectionCommand = false
+    @PerceptionIgnored private var touchThemePresetShortcutSuppressedUntil = 0.0
+    @PerceptionIgnored private var rightStickVector = MenuControllerScrollVector.zero
+    @PerceptionIgnored private(set) var lastRightStickScrollDirection: MenuControllerCommand?
+    @PerceptionIgnored private(set) var isRepeatingDirectionCommand = false
     /// Transient multiplier for the directional command currently being
     /// delivered. Navigation sessions use it to keep focus-scroll animations
     /// shorter than the accelerating repeat cadence.
-    @ObservationIgnored private(set) var directionalRepeatAcceleration = 1.0
-    @ObservationIgnored private(set) var isRightStickScrolling = false
-    @ObservationIgnored private var rightStickHoldStartTime: CFTimeInterval?
-    @ObservationIgnored private var rightStickSessionOwner: (id: UUID, scopeKey: String)?
-    @ObservationIgnored private var rightStickTargets: [UUID: RightStickTarget] = [:]
-    @ObservationIgnored private var activeRightStickTargetID: UUID?
-    @ObservationIgnored private var rightStickRegistrationSequence: UInt64 = 0
-    @ObservationIgnored private var rightStickRedispatchTask: Task<Void, Never>?
-    @ObservationIgnored private let globalScrollDriver = MenuControllerGlobalScrollDriver()
-    @ObservationIgnored private let feedbackPlayer = MenuControllerFeedbackPlayer()
+    @PerceptionIgnored private(set) var directionalRepeatAcceleration = 1.0
+    @PerceptionIgnored private(set) var isRightStickScrolling = false
+    @PerceptionIgnored private var rightStickHoldStartTime: CFTimeInterval?
+    @PerceptionIgnored private var rightStickSessionOwner: (id: UUID, scopeKey: String)?
+    @PerceptionIgnored private var rightStickTargets: [UUID: RightStickTarget] = [:]
+    @PerceptionIgnored private var activeRightStickTargetID: UUID?
+    @PerceptionIgnored private var rightStickRegistrationSequence: UInt64 = 0
+    @PerceptionIgnored private var rightStickRedispatchTask: Task<Void, Never>?
+    @PerceptionIgnored private let globalScrollDriver = MenuControllerGlobalScrollDriver()
+    @PerceptionIgnored private let feedbackPlayer = MenuControllerFeedbackPlayer()
 
     func start() {
         ControllerEventDeliveryCoordinator.shared.install(router: self)

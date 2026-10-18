@@ -85,7 +85,7 @@ iOS device.
 
 - `build-ios-xcode/` is generated output and should not be committed.
 - The build target is iOS device arm64 by default.
-- Minimum iOS version is 17.4.
+- Minimum iOS version is 16.0. The SwiftUI layer uses the swift-perception back-port of the Observation framework on iOS 16, and the helpers in `app/src/main/swift/Models/iOS16Compat.swift` for newer SwiftUI APIs.
 - JIT availability depends on how the app is signed and launched. Unsigned IPAs
   may need to be resigned or launched with a compatible sideloading/debug setup.
 - Do not rename low-level iOS JIT/runtime symbols unless you are intentionally

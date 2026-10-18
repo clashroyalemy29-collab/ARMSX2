@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct ControllerAssetImage: View {
     let fileName: String
@@ -11,7 +12,9 @@ struct ControllerAssetImage: View {
     let skin: VirtualPadSkin
     var descriptor: VPadSkinDescriptor? = nil
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if skin == .crispVector {
             ControllerVectorGlyph(
                 fileName: fileName,
@@ -48,7 +51,9 @@ private struct ControllerVectorGlyph: View {
     let fallbackColor: Color
     let fallbackFontSize: CGFloat
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let lowerName = fileName.lowercased()
 
         GeometryReader { geo in
@@ -115,7 +120,9 @@ private struct FaceGlyph: View {
 
     let kind: Kind
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             let side = min(geo.size.width, geo.size.height)
             let lineWidth = max(2, side * 0.08)
@@ -187,7 +194,9 @@ private struct DPadGlyph: View {
 
     let direction: Direction
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             let side = min(geo.size.width, geo.size.height)
 
@@ -209,7 +218,9 @@ private struct DPadGlyph: View {
 private struct ShoulderGlyph: View {
     let label: String
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             let corner = min(geo.size.height * 0.28, 14)
 
@@ -236,7 +247,9 @@ private struct CapsuleGlyph: View {
     let label: String
     let symbol: Symbol
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             ZStack {
                 Capsule()
@@ -274,7 +287,9 @@ private struct CapsuleGlyph: View {
 private struct CircleLabelGlyph: View {
     let label: String
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             let side = min(geo.size.width, geo.size.height)
 
@@ -294,7 +309,9 @@ private struct CircleLabelGlyph: View {
 }
 
 private struct AnalogBaseGlyph: View {
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             let side = min(geo.size.width, geo.size.height)
 
@@ -313,7 +330,9 @@ private struct AnalogBaseGlyph: View {
 }
 
 private struct AnalogStickGlyph: View {
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             ZStack {
                 Circle()

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 // Every installed pack, or only one game's when serial is set, with options below them.
 struct TexturePacksView<Options: View>: View {
@@ -25,7 +26,9 @@ struct TexturePacksView<Options: View>: View {
 
     private var targetPrefix: String { serial == nil ? "settings.textures" : "per-game.textures" }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let running = ARMSX2Bridge.currentTextureSerial()
         Form {
             if serial == nil && !running.isEmpty {
@@ -68,7 +71,7 @@ struct TexturePacksView<Options: View>: View {
                 }
                 if let packs {
                     if packs.isEmpty && !importing {
-                        ContentUnavailableView(settings.localized("No texture packs installed."), systemImage: "photo.stack")
+                        ContentUnavailableCompat(settings.localized("No texture packs installed."), systemImage: "photo.stack")
                             .frame(maxWidth: .infinity)
                     }
                     ForEach(packs) { pack in
@@ -86,7 +89,7 @@ struct TexturePacksView<Options: View>: View {
         .task { await reload() }
         // Without a declared order, focus would stay on a removed pack's button.
         .controllerAccessibilityTargetOrder(packTargets)
-        .onChange(of: packTargets, initial: true) { _, targets in controllerTargets = targets }
+        .onChangeCompat(of: packTargets, initial: true) { _, targets in controllerTargets = targets }
         .sheet(isPresented: $showCatalog, onDismiss: { Task { await reload() } }) {
             NavigationStack {
                 TextureCatalogView(serial: serial, controllerInput: controllerInput)
@@ -217,7 +220,9 @@ struct TexturePacksView<Options: View>: View {
 struct TextureReplacementSettings: View {
     @State private var settings = SettingsStore.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Section(settings.localized("Texture Replacement")) {
             Toggle(settings.localized("Load Replacement Textures"), isOn: $settings.loadTextureReplacements)
             Text(settings.localized("Loads PNG or DDS texture packs from Documents/textures/[Game Serial]/replacements/. Texture packs use app storage and may be large. Requires restart."))

@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 /// How a number is written down. A value rather than a closure, so the unit lives in one
 /// translatable template instead of being spelled " ms" at every call site, and so the rounding
@@ -442,7 +443,9 @@ struct NumberRow: View {
                   settings: settings)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         content
             .padding(.vertical, rowStyle.verticalPadding)
             .controllerAccessibilityAdjustableTarget(
@@ -452,11 +455,11 @@ struct NumberRow: View {
                 onIncrement: { controllerAdjust(by: 1) },
                 onDecrement: { controllerAdjust(by: -1) }
             )
-            .onChange(of: store.wrappedValue) { _, _ in
+            .onChangeCompat(of: store.wrappedValue) { _, _ in
                 guard isDragging else { return }
                 activity.update(localizedTitle, displayText, true)
             }
-            .onChange(of: fieldFocused) { _, focused in
+            .onChangeCompat(of: fieldFocused) { _, focused in
                 if !focused { commit() }
             }
             .onDisappear(perform: release)
@@ -930,7 +933,9 @@ private struct OptionalHint: ViewModifier {
     let text: String?
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if let text {
             content.accessibilityHint(text)
         } else {
@@ -972,7 +977,9 @@ struct ConfirmedSettingsResetButton: View {
         self.action = action
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Button(role: .destructive, action: confirm) {
             HStack(spacing: 12) {
                 Text(title)

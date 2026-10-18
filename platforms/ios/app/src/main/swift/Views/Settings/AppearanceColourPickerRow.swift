@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0+
 import SwiftUI
+import Perception
 
 // Localize the palette catalogue once per language, not once for
 // each colour row on every slider/focus update. Only value data is retained.
@@ -41,7 +42,9 @@ struct AppearanceColourPickerRow<Value: Hashable>: View {
         options.firstIndex { $0.id == selection } ?? 0
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(spacing: 2) {
             Picker(selection: $selection) {
                 ForEach(options, id: \.id) { option in

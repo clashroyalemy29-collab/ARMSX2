@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import Foundation
+import Perception
 
 struct ExternalGameDirectory: Identifiable, Hashable {
     let id: String
@@ -10,7 +11,7 @@ struct ExternalGameDirectory: Identifiable, Hashable {
     let isDirectory: Bool
 }
 
-@Observable
+@Perceptible
 final class ExternalGameLibrary: @unchecked Sendable {
     static let shared = ExternalGameLibrary()
     static let didChangeNotification = Notification.Name("ARMSX2iOSExternalGameLibraryDidChange")

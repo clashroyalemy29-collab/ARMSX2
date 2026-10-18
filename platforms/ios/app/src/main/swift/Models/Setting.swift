@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import Foundation
+import Perception
 
-/// One INI-backed setting. The @Observable macro owns the stored property, `didSet`
+/// One INI-backed setting. The @Perceptible macro owns the stored property, `didSet`
 /// hands the value to `commit`, and every `EmuCore/GS` key nudges the running VM
 /// after it is written unless it is boot only.
 ///

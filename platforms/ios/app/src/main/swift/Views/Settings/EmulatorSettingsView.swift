@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct EmulatorSettingsView: View {
     @State private var settings = SettingsStore.shared
@@ -24,7 +25,9 @@ struct EmulatorSettingsView: View {
         )
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section {
                 Toggle(isOn: Binding(

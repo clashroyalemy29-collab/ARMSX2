@@ -24,6 +24,10 @@ cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -G Xcode \
 	-DARMSX2_DISPLAY_NAME="$DISPLAY_NAME" \
 	-DARMSX2_VERSION_SUFFIX="$VERSION_SUFFIX"
 
+# The SwiftUI layer imports Perception (the iOS 16 back-port of Observation). CMake
+# cannot declare Swift packages, so record it in the generated project.
+"$ROOT_DIR/scripts/add-swift-packages.sh" "$BUILD_DIR/ARMSX2iOS.xcodeproj"
+
 cat <<EOF
 
 Generated Xcode project:
@@ -33,7 +37,7 @@ Open in Xcode:
   open "$BUILD_DIR/ARMSX2iOS.xcodeproj"
 
 Unsigned device build:
-  xcodebuild -project "$BUILD_DIR/ARMSX2iOS.xcodeproj" -scheme ARMSX2iOS -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+  xcodebuild -project "$BUILD_DIR/ARMSX2iOS.xcodeproj" -scheme ARMSX2iOS -configuration Release -sdk iphoneos -skipMacroValidation -skipPackagePluginValidation CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
 
 To use automatic signing, regenerate with:
   TEAM_ID=YOUR_APPLE_TEAM_ID BUNDLE_ID=com.your.bundle.id ./scripts/generate-ios-xcode.sh

@@ -2,12 +2,15 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct FramePacingSettingsView: View {
     @State private var settings = SettingsStore.shared
     @State private var presetDetailsTarget: FramePacingPreset?
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             if settings.framePacingPreset == .custom {
                 Text(settings.localized("You've changed individual settings. Pick a preset to return to its values."))
@@ -130,7 +133,9 @@ private struct PresetDetailsSheet: View {
     let preset: FramePacingPreset
     private var settings: SettingsStore { SettingsStore.shared }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             ScrollView {
                 Text(settings.localized(preset.details))

@@ -155,6 +155,9 @@ xcodebuild \
 	-scheme ARMSX2iOS \
 	-configuration Release \
 	-sdk iphoneos \
+	-skipMacroValidation \
+	-skipPackagePluginValidation \
+	-clonedSourcePackagesDirPath "$BUILD_DIR/SourcePackages" \
 	CODE_SIGNING_ALLOWED=NO \
 	CODE_SIGNING_REQUIRED=NO \
 	CODE_SIGN_IDENTITY="" \

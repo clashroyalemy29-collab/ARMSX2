@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 /// Destinations the pause menu hands back to the host to present. (Also the associated payload of
 /// the host's overlay route state machine.)
@@ -87,7 +88,9 @@ struct QuickMenuView: View {
         static let backToMenu = "quick-menu.back-to-menu"
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         // The host (GameOverlayContainer) frames this view to the bounded card size; read that
         // size here to decide whether the geometry comfortably supports two columns.
         GeometryReader { geo in
@@ -202,7 +205,7 @@ struct QuickMenuView: View {
                     )
                 }
         }
-        .onChange(of: showStopConfirmation) { _, isPresented in
+        .onChangeCompat(of: showStopConfirmation) { _, isPresented in
             guard isPresented else { return }
             MenuAudioPackManager.shared.playEvent(.uiToast)
         }
@@ -931,7 +934,9 @@ struct ChangeDiscPanel: View {
 
     private var driveTitle: String { driveDisc ?? settings.localized("No disc") }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             let landscape = variant == .phoneLandscape
             let twoColumns = !discs.isEmpty
@@ -1161,7 +1166,9 @@ struct LandscapeCommandBar: View {
     @Environment(\.uiAccentColour) private var accentColour
     @Environment(\.controllerTextAppearance) private var textAppearance
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
                 Image(systemName: systemImage)
@@ -1238,7 +1245,9 @@ struct QuickMenuFooter: View {
     var resumeImage = "play.fill"
     var hint: ControllerHintLine?
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(spacing: 0) {
             OverlayTheme.separator
                 .frame(height: 0.5)
@@ -1299,7 +1308,9 @@ private struct QuickMenuStopButton: View {
 
     private var diameter: CGFloat { compact ? 36 : 46 }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Button(action: action) {
             Image(systemName: ejects ? "eject.fill" : "stop.fill")
                 .font(.system(size: compact ? 13 : 16, weight: .bold))

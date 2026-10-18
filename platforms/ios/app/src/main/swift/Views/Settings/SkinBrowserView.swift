@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct SkinBrowserView: View {
     /// Ready means the skin ships a layout for iOS. The rest still install, they
@@ -26,7 +27,9 @@ struct SkinBrowserView: View {
     @State private var showsSearchKeyboard = false
     @Environment(\.menuControllerInputRouter) private var controllerInput
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         List {
             if controllerInput?.isControllerNavigationEnabled == true {
                 Button {
@@ -146,7 +149,7 @@ struct SkinBrowserView: View {
                 },
                 onCancel: { showsSearchKeyboard = false }
             )
-            .presentationBackground(.clear)
+            .presentationBackgroundClearCompat()
             .appStatusBarHidden()
         }
     }
@@ -420,7 +423,9 @@ private struct SkinPreviewSheet: View {
     let controllerInput: MenuControllerInputRouter?
     @Environment(\.dismiss) private var dismiss
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             AsyncImage(url: SkinCatalog.previewURL(for: skin)) { image in
                 image.resizable().aspectRatio(contentMode: .fit)
@@ -431,7 +436,7 @@ private struct SkinPreviewSheet: View {
             .navigationTitle(skin.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button(SettingsStore.shared.localized("Done")) { dismiss() }
                 }
             }

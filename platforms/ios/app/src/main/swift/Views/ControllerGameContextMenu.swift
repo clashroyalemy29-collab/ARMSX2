@@ -3,6 +3,7 @@
 
 import SwiftUI
 import Foundation
+import Perception
 
 enum GameLibraryControllerMenuSection: Equatable {
     case root
@@ -67,7 +68,9 @@ struct ControllerGameContextMenu: View {
         controllerInput ?? environmentControllerInput
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { proxy in
             let isCompact = verticalSizeClass == .compact || proxy.size.height < 500
             let panelWidth = min(isCompact ? 390 : 440, max(280, proxy.size.width - 24))
@@ -199,7 +202,7 @@ struct ControllerGameContextMenu: View {
                 .contentShape(RoundedRectangle(cornerRadius: isCompact ? 9 : 12))
             }
             .buttonStyle(.plain)
-            .focusEffectDisabled()
+            .focusEffectDisabledCompat()
             .controllerNavigationOrbTarget(
                 id: "context.play-or-stop",
                 isActive: playOrStopSelected,
@@ -244,9 +247,9 @@ struct ControllerGameContextMenu: View {
             }
             .frame(height: maxHeight)
             .scrollIndicators(.visible)
-            .onChange(of: selectedAction) { _, action in
+            .onChangeCompat(of: selectedAction) { _, action in
                 guard let action else { return }
-                withAnimation(.snappy(duration: 0.22)) {
+                withAnimation(.snappyCompat(duration: 0.22)) {
                     proxy.scrollTo(action, anchor: .center)
                 }
             }
@@ -311,12 +314,12 @@ struct ControllerGameContextMenu: View {
             .animation(
                 reduceMotion
                     ? .linear(duration: 0.1)
-                    : .smooth(duration: 0.2, extraBounce: 0.04),
+                    : .smoothCompat(duration: 0.2, extraBounce: 0.04),
                 value: isSelected
             )
         }
         .buttonStyle(.plain)
-        .focusEffectDisabled()
+        .focusEffectDisabledCompat()
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         // Read the final button bounds after its focus transform. Anchoring
         // inside the label omitted Button/List adjustments and displaced the
@@ -366,7 +369,9 @@ private struct ControllerNavigationAlertDetailRow: View {
     @Environment(\.uiAccentColour) private var accentColour
     @Environment(\.menuControllerInputRouter) private var controllerInput
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(alignment: .center, spacing: isCompact ? 8 : 12) {
             Text(detail.label)
                 .foregroundStyle(secondaryContentColour)
@@ -478,7 +483,9 @@ private struct ControllerNavigationAlertDetailFocusModifier: ViewModifier {
     let detail: ControllerNavigationAlertDetail
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if detail.isInteractive {
             content.controllerAccessibilityPickerTarget(
                 id: "alert.detail.\(detail.id)",
@@ -534,7 +541,9 @@ struct ControllerNavigationAlert: View {
             && controllerInput?.isControllerNavigationEnabled == true
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { proxy in
             let isCompact = verticalSizeClass == .compact || proxy.size.height < 500
             let isLandscape = proxy.size.width > proxy.size.height
@@ -983,7 +992,7 @@ struct ControllerNavigationAlert: View {
                     ) {
                         onSelect(index)
                     }
-                    .focusEffectDisabled()
+                    .focusEffectDisabledCompat()
                     .accessibilityAddTraits(isSelected ? .isSelected : [])
                     .controllerNavigationOrbTarget(
                         id: "alert.\(action.id)",
@@ -1018,7 +1027,9 @@ struct ControllerNavigationAlert: View {
 private struct ControllerSkinArtworkPreview: View {
     let descriptor: VPadSkinDescriptor
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if let fullSkin = ControllerAsset.fullSkinImage(
             descriptor: descriptor,
             isLandscape: true
@@ -1213,7 +1224,9 @@ extension View {
 private struct StopConfirmationSourceModifier: ViewModifier {
     @Environment(\.stopConfirmationPresented) private var isPresented
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
             .overlay {
                 if isPresented {
@@ -1268,7 +1281,9 @@ struct StopGameConfirmation: View {
         SettingsStore.shared.localized(key)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { proxy in
             let isRegular = horizontalSizeClass == .regular
             let width = isRegular ? 328 : max(0, proxy.size.width - 32)
@@ -1395,7 +1410,7 @@ struct StopGameConfirmation: View {
         ) {
             onSelect(index)
         }
-        .focusEffectDisabled()
+        .focusEffectDisabledCompat()
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 private struct ShaderLayerBrowserRequest: Identifiable {
     let id = UUID()
@@ -52,12 +53,14 @@ struct ShaderWorkspaceView: View {
     private static let managementID = "shaders"
     /// Expansion/collapse changes the Form row immediately; only the following
     /// viewport movement animates, so UIKit cannot slide the whole section.
-    private static let layerScrollAnimation = Animation.smooth(
+    private static let layerScrollAnimation = Animation.smoothCompat(
         duration: 0.46,
         extraBounce: 0
     )
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Group {
             if detailPresented, let pass = selectedPass {
                 passContent(pass)
@@ -67,7 +70,7 @@ struct ShaderWorkspaceView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .transition(.opacity)
-        .animation(.smooth(duration: 0.28), value: detailPresented)
+        .animation(.smoothCompat(duration: 0.28), value: detailPresented)
         .task(id: activePresetToken) {
             let configuration = ShaderWorkspacePresetEditor.configuration(
                 for: activePresetToken
@@ -88,26 +91,26 @@ struct ShaderWorkspaceView: View {
             normalizeSelection()
             publishControllerOrder()
         }
-        .onChange(of: passLibrary.passes) { _, _ in
+        .onChangeCompat(of: passLibrary.passes) { _, _ in
             normalizeSelection()
             publishControllerOrder()
         }
-        .onChange(of: selectedCategoryID) { _, _ in
+        .onChangeCompat(of: selectedCategoryID) { _, _ in
             publishControllerOrder()
         }
-        .onChange(of: detailPresented) { _, _ in
+        .onChangeCompat(of: detailPresented) { _, _ in
             publishControllerOrder()
         }
-        .onChange(of: showsExtra) { _, _ in
+        .onChangeCompat(of: showsExtra) { _, _ in
             publishControllerOrder()
         }
-        .onChange(of: expandedPassIDs) { _, _ in
+        .onChangeCompat(of: expandedPassIDs) { _, _ in
             publishControllerOrder()
         }
-        .onChange(of: expandedLayerIDs) { _, _ in
+        .onChangeCompat(of: expandedLayerIDs) { _, _ in
             publishControllerOrder()
         }
-        .onChange(of: params.params) { _, _ in
+        .onChangeCompat(of: params.params) { _, _ in
             publishControllerOrder()
         }
         .onAppear { publishControllerOrder() }
@@ -218,7 +221,7 @@ struct ShaderWorkspaceView: View {
                 )
                 .allowsHitTesting(false)
             }
-            .onChange(of: layerScrollRequest) { _, request in
+            .onChangeCompat(of: layerScrollRequest) { _, request in
                 guard let request else { return }
                 Task { @MainActor in
                     // First let Form adopt the expanded row height. The
@@ -241,7 +244,7 @@ struct ShaderWorkspaceView: View {
             HStack(spacing: 12) {
                 Button {
                     performTouchAction(.activate) {
-                        withAnimation(.smooth(duration: 0.22)) {
+                        withAnimation(.smoothCompat(duration: 0.22)) {
                             showsExtra.toggle()
                         }
                     }
@@ -256,7 +259,7 @@ struct ShaderWorkspaceView: View {
                     id: "shader-workspace.extra",
                     label: settings.localized("Extra")
                 ) {
-                    withAnimation(.smooth(duration: 0.22)) {
+                    withAnimation(.smoothCompat(duration: 0.22)) {
                         showsExtra.toggle()
                     }
                 }
@@ -338,7 +341,7 @@ struct ShaderWorkspaceView: View {
             }
             .textCase(nil)
         }
-        .animation(.smooth(duration: 0.3), value: workspaceLayers)
+        .animation(.smoothCompat(duration: 0.3), value: workspaceLayers)
     }
 
     private func shaderLayerCard(
@@ -1179,7 +1182,9 @@ private struct ShaderPassReorderButton: View {
 
     @Environment(\.uiAccentColour) private var accentColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(spacing: 0) {
             Button {
                 performTouchAction(onMoveUp)

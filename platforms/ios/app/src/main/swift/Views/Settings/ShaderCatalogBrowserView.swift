@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 private struct ShaderCatalogGroup: Identifiable {
     let id: String
@@ -24,7 +25,9 @@ struct ShaderCatalogBrowserView: View {
     @State private var downloadAllProgress: (completed: Int, total: Int)?
     @State private var copiedLinkID: String?
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         List {
             if catalog.isStale, let updated = catalog.lastUpdated {
                 Text(String(format: localized("Last updated %@"),

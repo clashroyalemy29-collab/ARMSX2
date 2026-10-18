@@ -30,6 +30,8 @@ cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -G Xcode \
 	-DARMSX2_REAL_DEVICE=OFF \
 	-DARMSX2_BUNDLE_IDENTIFIER="$BUNDLE_ID"
 
+"$ROOT_DIR/scripts/add-swift-packages.sh" "$BUILD_DIR/ARMSX2iOS.xcodeproj"
+
 cat <<EOF
 
 Generated iOS Simulator Xcode project:
@@ -39,6 +41,6 @@ Open in Xcode:
   open "$BUILD_DIR/ARMSX2iOS.xcodeproj"
 
 Simulator build:
-  xcodebuild -project "$BUILD_DIR/ARMSX2iOS.xcodeproj" -scheme ARMSX2iOS -configuration Debug -sdk iphonesimulator build
+  xcodebuild -project "$BUILD_DIR/ARMSX2iOS.xcodeproj" -scheme ARMSX2iOS -configuration Debug -sdk iphonesimulator -skipMacroValidation -skipPackagePluginValidation build
 
 EOF

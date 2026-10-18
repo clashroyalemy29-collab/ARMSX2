@@ -5,8 +5,7 @@ import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
 import UIKit
-import Observation
-
+import Perception
 /// Region-string to flag emoji mapping, shared by library cards and the game
 /// info detail view. Returns an empty string for unknown regions so callers can
 /// omit the flag without rendering a broken placeholder.
@@ -901,7 +900,9 @@ private struct GameCoverThemeGlowModifier: ViewModifier {
     let secondaryColor: Color
     @State private var phase = RunningCoverGlowPhase.initial
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
             .shadow(
                 color: primaryColor.opacity(phase.opacity),
@@ -1002,7 +1003,9 @@ private struct GameLibraryScrollPhaseModifier: ViewModifier {
     let activity: GameLibraryActivityState
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if #available(iOS 18.0, *) {
             content.onScrollPhaseChange { _, newPhase in
                 activity.isScrolling = newPhase.isScrolling
@@ -1032,7 +1035,9 @@ private struct RunningStatusText: View {
     var centered = false
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if isStopping {
             Text(stoppingLabel)
                 .font(stoppingFont.bold())
@@ -1086,7 +1091,7 @@ enum GameLibraryRuntimeResources {
 }
 
 @MainActor
-@Observable
+@Perceptible
 private final class GameLibraryControllerCardFocusState {
     var isFocused: Bool
 
@@ -1121,7 +1126,7 @@ private enum GameLibraryNowRunningControllerAction: Int, CaseIterable {
 }
 
 @MainActor
-@Observable
+@Perceptible
 private final class GameLibraryNowRunningControllerFocusState {
     var selectedAction: GameLibraryNowRunningControllerAction?
 }
@@ -1143,7 +1148,9 @@ private struct GameLibraryNowRunningControllerFocusModifier: ViewModifier {
             && state.selectedAction == action
     }
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         Group {
             if isFocused {
                 content
@@ -1163,7 +1170,7 @@ private struct GameLibraryNowRunningControllerFocusModifier: ViewModifier {
                     .foregroundStyle(action == .stop ? Color.red : Color.white)
             }
         }
-            .focusEffectDisabled()
+            .focusEffectDisabledCompat()
             .controllerNavigationOrbTarget(
                 id: "library.now-running.\(action.rawValue)",
                 isActive: isFocused,
@@ -1177,23 +1184,23 @@ private struct GameLibraryNowRunningControllerFocusModifier: ViewModifier {
             .animation(
                 reduceMotion
                     ? .linear(duration: 0.1)
-                    : .smooth(duration: 0.16, extraBounce: 0),
+                    : .smoothCompat(duration: 0.16, extraBounce: 0),
                 value: isFocused
             )
     }
 }
 
 @MainActor
-@Observable
+@Perceptible
 private final class GameLibraryControllerFocusState {
-    @ObservationIgnored private var storedSelectedGameID: String?
-    @ObservationIgnored private var storedIsActive = false
-    @ObservationIgnored private var isLibraryZone = true
-    @ObservationIgnored private var isLibraryVisible = true
-    @ObservationIgnored private var cardStates: [String: GameLibraryControllerCardFocusState] = [:]
-    @ObservationIgnored private var gameIndexByID: [String: Int] = [:]
-    @ObservationIgnored private var scrollSequence: UInt64 = 0
-    @ObservationIgnored private var suppressNextSelectionScroll = false
+    @PerceptionIgnored private var storedSelectedGameID: String?
+    @PerceptionIgnored private var storedIsActive = false
+    @PerceptionIgnored private var isLibraryZone = true
+    @PerceptionIgnored private var isLibraryVisible = true
+    @PerceptionIgnored private var cardStates: [String: GameLibraryControllerCardFocusState] = [:]
+    @PerceptionIgnored private var gameIndexByID: [String: Int] = [:]
+    @PerceptionIgnored private var scrollSequence: UInt64 = 0
+    @PerceptionIgnored private var suppressNextSelectionScroll = false
 
     var selectionScrollRequest: GameLibrarySelectionScrollRequest?
 
@@ -1314,41 +1321,43 @@ private struct GameLibraryControllerCommandListener: View {
     let onRightStickScrollEnded: () -> Void
     let onInputAvailabilityChanged: () -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
-            .onChange(of: controllerInput?.latestEvent) { _, event in
+            .onChangeCompat(of: controllerInput?.latestEvent) { _, event in
                 guard let event else { return }
                 onCommand(event)
             }
-            .onChange(of: controllerInput?.latestLibraryEntryRequest) { _, request in
+            .onChangeCompat(of: controllerInput?.latestLibraryEntryRequest) { _, request in
                 guard let request else { return }
                 onLibraryEntry(request.preferLast)
             }
-            .onChange(of: controllerInput?.focusReleaseSequence) { _, _ in
+            .onChangeCompat(of: controllerInput?.focusReleaseSequence) { _, _ in
                 onFocusRelease()
             }
-            .onChange(
+            .onChangeCompat(
                 of: controllerInput?.rightStickScrollEndSequence
             ) { _, _ in
                 onRightStickScrollEnded()
             }
-            .onChange(
+            .onChangeCompat(
                 of: controllerInput?.isControllerNavigationEnabled
             ) { _, enabled in
                 if enabled == false { onFocusRelease() }
                 onInputAvailabilityChanged()
             }
-            .onChange(of: controllerInput?.navigationZone, initial: true) { _, zone in
+            .onChangeCompat(of: controllerInput?.navigationZone, initial: true) { _, zone in
                 focusState.setLibraryZoneActive(zone == .library)
                 onInputAvailabilityChanged()
             }
-            .onChange(of: controllerInput?.isNavigationCaptured, initial: true) { _, _ in
+            .onChangeCompat(of: controllerInput?.isNavigationCaptured, initial: true) { _, _ in
                 onInputAvailabilityChanged()
             }
-            .onChange(of: libraryVisible, initial: true) { _, visible in
+            .onChangeCompat(of: libraryVisible, initial: true) { _, visible in
                 focusState.setLibraryVisible(visible)
                 onInputAvailabilityChanged()
             }
@@ -1356,7 +1365,7 @@ private struct GameLibraryControllerCommandListener: View {
 }
 
 @MainActor
-@Observable
+@Perceptible
 private final class GameLibraryControllerScrollAvailability {
     var isEnabled = false
 }
@@ -1369,7 +1378,9 @@ private struct GameLibraryControllerRightStickTarget: View {
     var pointsPerSecond: CGFloat = 760
     var onReachedLeadingEdge: (@MainActor () -> Void)?
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ControllerRightStickScrollTarget(
             controllerInput: controllerInput,
             axes: axes,
@@ -1382,10 +1393,10 @@ private struct GameLibraryControllerRightStickTarget: View {
 }
 
 @MainActor
-@Observable
+@Perceptible
 private final class GameLibraryScrollRestoreState {
     var topRequestSequence: UInt64 = 0
-    @ObservationIgnored private var consumedTopRequestSequence: UInt64 = 0
+    @PerceptionIgnored private var consumedTopRequestSequence: UInt64 = 0
 
     func requestTopRestore() {
         topRequestSequence &+= 1
@@ -1497,7 +1508,7 @@ private final class GameLibraryFocusScrollCoordinator: NSObject {
             return
         }
 
-        withAnimation(.smooth(duration: duration, extraBounce: 0)) {
+        withAnimation(.smoothCompat(duration: duration, extraBounce: 0)) {
             proxy.scrollTo(gameID, anchor: .center)
         }
     }
@@ -1853,7 +1864,9 @@ private struct GameLibraryControllerFocusScope<Content: View>: View {
     let isEnabled: Bool
     let content: (Bool) -> Content
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         // Touch-only library browsing does not need one observable focus object
         // per materialized card. The conditional expression preserves the card
         // subtree's identity when a controller connects.
@@ -1872,7 +1885,9 @@ private struct GameLibraryControllerCoverFlowLaunchAnchor: View {
     let centerCorrection: CGFloat
     let verticalPosition: CGFloat
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if let gameID = focusState.selectionScrollRequest?.gameID {
             Color.clear
                 .frame(width: width, height: height)
@@ -1899,12 +1914,14 @@ private struct GameLibraryScrollObserver: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
-            .onChange(
+            .onChangeCompat(
                 of: restoreState.topRequestSequence,
                 initial: true
             ) { _, sequence in
@@ -1918,7 +1935,7 @@ private struct GameLibraryScrollObserver: View {
                     }
                 }
             }
-            .onChange(
+            .onChangeCompat(
                 of: focusState.selectionScrollRequest,
                 initial: true
             ) { _, request in
@@ -1949,7 +1966,7 @@ private struct GameLibraryScrollObserver: View {
                             }
                         } else {
                             withAnimation(
-                                .smooth(duration: 0.32, extraBounce: 0.015)
+                                .smoothCompat(duration: 0.32, extraBounce: 0.015)
                             ) {
                                 proxy.scrollTo(request.gameID, anchor: .center)
                             }
@@ -1963,7 +1980,7 @@ private struct GameLibraryScrollObserver: View {
                             }
                         } else {
                             withAnimation(
-                                .smooth(duration: 0.20, extraBounce: 0)
+                                .smoothCompat(duration: 0.20, extraBounce: 0)
                             ) {
                                 proxy.scrollTo(request.gameID, anchor: .center)
                             }
@@ -1971,7 +1988,7 @@ private struct GameLibraryScrollObserver: View {
                     }
                 }
             }
-            .onChange(of: favoriteScrollRequest) { _, request in
+            .onChangeCompat(of: favoriteScrollRequest) { _, request in
                 guard let request else { return }
                 DispatchQueue.main.async {
                     // Resolve the destination after the favorite-first sort
@@ -1995,7 +2012,7 @@ private struct GameLibraryScrollObserver: View {
                             }
                             return
                         }
-                        withAnimation(.smooth(duration: 0.42, extraBounce: 0.02)) {
+                        withAnimation(.smoothCompat(duration: 0.42, extraBounce: 0.02)) {
                             switch request.destination {
                             case .firstGame(let gameID):
                                 proxy.scrollTo(gameID, anchor: topAlignment)
@@ -2025,12 +2042,14 @@ private struct GameLibraryControllerFocusModifier: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if isEnabled {
             let selectedScale = focusedScale
                 ?? (performanceOptimized ? 1.08 : 1.12)
             content
-                .focusEffectDisabled()
+                .focusEffectDisabledCompat()
                 .scaleEffect(
                     isFocused ? selectedScale : 1
                 )
@@ -2069,7 +2088,7 @@ private struct GameLibraryControllerFocusModifier: ViewModifier {
                                 ? min(0.06, optimizedAnimationDuration)
                                 : 0.12
                         )
-                        : .smooth(
+                        : .smoothCompat(
                             duration: performanceOptimized
                                 ? optimizedAnimationDuration
                                 : 0.24,
@@ -2092,7 +2111,7 @@ private enum GameLibraryControllerToolbarAction: Int, CaseIterable {
 }
 
 @MainActor
-@Observable
+@Perceptible
 private final class GameLibraryControllerToolbarFocusState {
     var selectedAction: GameLibraryControllerToolbarAction = .importGames
 }
@@ -2155,7 +2174,7 @@ private struct DeferredControllerContextMenuSelection {
 }
 
 @MainActor
-@Observable
+@Perceptible
 private final class GameLibraryControllerContextMenuState {
     var gameID: String?
     var section: GameLibraryControllerMenuSection = .root
@@ -2183,7 +2202,9 @@ private struct GameLibraryControllerContextMenuPresenter<Content: View>: View {
     }
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if let gameID = state.gameID {
             content(gameID, state.section, state.selectedAction)
         }
@@ -2201,7 +2222,9 @@ private struct ControllerToolbarFocusModifier: ViewModifier {
     var minimumWidth: CGFloat = 36
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         let isFocused = menuTabIsActive && !isCovered
             && controllerInput?.isControllerNavigationEnabled == true
             && controllerInput?.navigationZone == .topToolbar
@@ -2220,7 +2243,9 @@ private struct ControllerToolbarFocusModifier: ViewModifier {
 
 private struct GameLibraryListTopEdgeEffectModifier: ViewModifier {
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if #available(iOS 26.0, *) {
             content.scrollEdgeEffectHidden(true, for: .top)
         } else {
@@ -3069,7 +3094,9 @@ struct GameListView: View {
         }
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor private var perceptionBodyContent: some View {
         // Give the compiler a concrete boundary before the lifecycle modifier
         // chain. This screen owns many independent presentations; inferring
         // all of them plus every `onChange` as one nested generic type can
@@ -3112,7 +3139,7 @@ struct GameListView: View {
                                 scheduleLandscapeControllerAutofocus()
                             }
                         }
-                        .onChange(of: geo.size) { previousSize, size in
+                        .onChangeCompat(of: geo.size) { previousSize, size in
                             let enteredLandscape = size.width > size.height
                                 && previousSize.width <= previousSize.height
                             libraryContainerSize = size
@@ -3246,7 +3273,7 @@ struct GameListView: View {
             )
             .toolbar {
                 if !embeddedInMenuNavigation || ownsEmbeddedMenuToolbar {
-                ToolbarItem(id: "menu.gamesBrand", placement: .topBarLeading) {
+                ToolbarItem(id: "menu.gamesBrand", placement: .navigationBarLeading) {
                     if useGamesLogo, let image = logoStore.image {
                         Button(action: performBootBIOSAction) {
                             Image(uiImage: image)
@@ -3281,7 +3308,7 @@ struct GameListView: View {
                         .accessibilityLabel(settings.localized("Boot BIOS"))
                     }
                 }
-                ToolbarItem(id: "menu.import", placement: .topBarTrailing) {
+                ToolbarItem(id: "menu.import", placement: .navigationBarTrailing) {
                     Button {
                         openGameImporter()
                     } label: {
@@ -3291,7 +3318,7 @@ struct GameListView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(settings.localized("Import Games"))
                 }
-                ToolbarItem(id: "menu.layout", placement: .topBarTrailing) {
+                ToolbarItem(id: "menu.layout", placement: .navigationBarTrailing) {
                     Menu {
                         Button {
                             selectAlternateLibraryLayout()
@@ -3328,7 +3355,7 @@ struct GameListView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(settings.localized("Library Layout"))
                 }
-                ToolbarItem(id: "menu.more", placement: .topBarTrailing) {
+                ToolbarItem(id: "menu.more", placement: .navigationBarTrailing) {
                     Menu {
                         Button {
                             presentMenuPanel("cover_import_all") {
@@ -3550,7 +3577,7 @@ struct GameListView: View {
                 selection: $selectedCoverPhotoItem,
                 matching: .images
             )
-            .onChange(of: selectedCoverPhotoItem) { _, photoItem in
+            .onChangeCompat(of: selectedCoverPhotoItem) { _, photoItem in
                 guard let photoItem, let gameName = pendingCoverPhotoGameName else { return }
                 selectedCoverPhotoItem = nil
                 pendingCoverPhotoGameName = nil
@@ -3564,7 +3591,7 @@ struct GameListView: View {
                 ) {
                     GameInfoPanel(game: game)
                 }
-                .presentationBackground(.clear)
+                .presentationBackgroundClearCompat()
                 .appStatusBarHidden()
             }
             .fullScreenCover(isPresented: $gameLibraryViewOptionsPresented) {
@@ -3652,7 +3679,7 @@ struct GameListView: View {
                     }
                 }
                 .onDisappear { gameLibraryViewOptionsPreview = nil }
-                .presentationBackground(.clear)
+                .presentationBackgroundClearCompat()
                 .appStatusBarHidden()
             }
             // A page overlay cannot outrank NavigationStack chrome or the
@@ -3706,7 +3733,7 @@ struct GameListView: View {
                         .isolatedMenuGlassContainer()
                     }
                 }
-                .presentationBackground(.clear)
+                .presentationBackgroundClearCompat()
                 .appStatusBarHidden()
             }
             // Match Context Menu's scene-level presentation. A page overlay
@@ -3773,7 +3800,7 @@ struct GameListView: View {
                         controllerAlertSelectedIndex = 0
                     }
                     .contextMenuPanelTextAppearance()
-                    .presentationBackground(.clear)
+                    .presentationBackgroundClearCompat()
                     .appStatusBarHidden()
                 }
             }
@@ -3797,7 +3824,7 @@ struct GameListView: View {
                         releasePreparedGameSettings()
                     }
                 )
-                .presentationBackground(.clear)
+                .presentationBackgroundClearCompat()
                 .appStatusBarHidden()
             }
             .fullScreenCover(item: $renameTarget) { game in
@@ -3814,7 +3841,7 @@ struct GameListView: View {
                         renameTarget = nil
                     }
                 )
-                .presentationBackground(.clear)
+                .presentationBackgroundClearCompat()
                 .appStatusBarHidden()
             }
             .fullScreenCover(item: $discLinkTarget) { game in
@@ -3828,7 +3855,7 @@ struct GameListView: View {
                         loadGames()
                     }
                 }
-                .presentationBackground(.clear)
+                .presentationBackgroundClearCompat()
                 .appStatusBarHidden()
             }
             .fullScreenCover(item: $cheatsManagerTarget) { game in
@@ -3844,7 +3871,7 @@ struct GameListView: View {
                         controllerInput: controllerInput
                     )
                 }
-                .presentationBackground(.clear)
+                .presentationBackgroundClearCompat()
                 .appStatusBarHidden()
             }
 			}
@@ -3860,10 +3887,10 @@ struct GameListView: View {
             }
         let libraryObservers = presentation
         .onAppear(perform: handleLibraryAppear)
-        .onChange(of: renameTarget != nil, initial: true) { _, isPresented in
+        .onChangeCompat(of: renameTarget != nil, initial: true) { _, isPresented in
             onRenamePresentationChanged(isPresented)
         }
-        .onChange(of: controllerInput?.navigationZone) { _, zone in
+        .onChangeCompat(of: controllerInput?.navigationZone) { _, zone in
             if zone == .topToolbar {
                 rememberControllerToolbarFocus()
             }
@@ -3871,7 +3898,7 @@ struct GameListView: View {
                 for: zone == .library ? controllerSelectedGameID : nil
             )
         }
-        .onChange(of: controllerContextMenuState.gameID) { _, gameID in
+        .onChangeCompat(of: controllerContextMenuState.gameID) { _, gameID in
             if let gameID {
                 updateGameCoverThemePreview(
                     for: gameID,
@@ -3882,7 +3909,7 @@ struct GameListView: View {
                 updateGameCoverThemePreview(for: controllerSelectedGameID)
             }
         }
-        .onChange(of: controllerToolbarFocusState.selectedAction) { _, _ in
+        .onChangeCompat(of: controllerToolbarFocusState.selectedAction) { _, _ in
             if controllerInput?.navigationZone == .topToolbar {
                 rememberControllerToolbarFocus()
             }
@@ -3901,7 +3928,7 @@ struct GameListView: View {
         )
 
         return libraryObservers
-        .onChange(of: games) { _, updatedGames in
+        .onChangeCompat(of: games) { _, updatedGames in
             controllerFocusState.updateGameIDs(updatedGames.map(\.id))
             updateGameCoverThemePreview(for: controllerSelectedGameID)
             if let controllerSelectedGameID,
@@ -3924,7 +3951,7 @@ struct GameListView: View {
                 scheduleLandscapeControllerAutofocus()
             }
         }
-        .onChange(of: displayedRunningGameName) { _, runningGame in
+        .onChangeCompat(of: displayedRunningGameName) { _, runningGame in
             if runningGame == nil {
                 runningGameControllerFocusPending = false
                 controllerNowRunningFocusState.selectedAction = nil
@@ -3933,7 +3960,7 @@ struct GameListView: View {
                 _ = focusRunningControllerGameIfAvailable()
             }
         }
-        .onChange(of: controllerInput?.hasConnectedController) { _, connected in
+        .onChangeCompat(of: controllerInput?.hasConnectedController) { _, connected in
             if connected == true {
                 if appState.runningGameName != nil {
                     runningGameControllerFocusPending = true
@@ -3949,7 +3976,7 @@ struct GameListView: View {
                 focusScrollCoordinator.cancel()
             }
         }
-        .onChange(of: menuTabIsActive) { _, active in
+        .onChangeCompat(of: menuTabIsActive) { _, active in
             updateGameCoverThemePreview(
                 for: active ? controllerSelectedGameID : nil
             )
@@ -3961,7 +3988,7 @@ struct GameListView: View {
                 scheduleLandscapeControllerAutofocus()
             }
         }
-        .onChange(of: manuallyCapturedControllerPresentationActive) { _, active in
+        .onChangeCompat(of: manuallyCapturedControllerPresentationActive) { _, active in
             let shouldCapture = active
                 || controllerContextMenuState.gameID != nil
             controllerInput?.setNavigationCaptured(
@@ -3974,7 +4001,7 @@ struct GameListView: View {
                 scheduleLandscapeControllerAutofocus()
             }
         }
-        .onChange(of: controllerNavigationPresentationActive) { _, active in
+        .onChangeCompat(of: controllerNavigationPresentationActive) { _, active in
             guard active else { return }
             // Modal destinations own the foreground. Stop speculative cover
             // decoding and any in-flight centering work until the library is
@@ -3983,7 +4010,7 @@ struct GameListView: View {
             focusScrollCoordinator.stopAnimation()
             gameLibraryActivity.isScrolling = false
         }
-        .onChange(of: activeControllerAlertKind) { previous, kind in
+        .onChangeCompat(of: activeControllerAlertKind) { previous, kind in
             controllerAlertSelectedIndex = 0
             guard let kind, kind != previous else { return }
             MenuAudioPackManager.shared.playEvent(.uiToast)
@@ -4165,12 +4192,12 @@ struct GameListView: View {
                         )
                 }
             }
-            .contentMargins(.top, 0, for: .scrollContent)
+            .contentMarginsCompat(.top, 0)
             .scrollIndicators(.hidden)
             .modifier(GameLibraryListTopEdgeEffectModifier())
             .scrollContentBackground(.hidden)
             .scrollDisabled(false)
-            .scrollBounceBehavior(.always)
+            .scrollBounceAlwaysCompat()
             .trackGameLibraryScrollPhase(gameLibraryActivity)
             .transaction { transaction in
                 if transaction.isContinuous || gameLibraryActivity.isScrolling {
@@ -4231,7 +4258,7 @@ struct GameListView: View {
                             .scaleEffect(displayedNowRunningCardScale)
                             .opacity(displayedNowRunningCardOpacity)
                             .animation(
-                                .smooth(duration: 0.65, extraBounce: 0.04),
+                                .smoothCompat(duration: 0.65, extraBounce: 0.04),
                                 value: displayedNowRunningCardScale
                             )
                             .animation(.linear(duration: 0.65), value: displayedNowRunningCardOpacity)
@@ -4288,10 +4315,10 @@ struct GameListView: View {
                 }
                 .padding(.top, showsPageOwnedLargeTitle ? 0 : 12)
             }
-            .contentMargins(.top, 0, for: .scrollContent)
+            .contentMarginsCompat(.top, 0)
             .scrollIndicators(.hidden)
             .scrollDisabled(false)
-            .scrollBounceBehavior(.always)
+            .scrollBounceAlwaysCompat()
             .trackGameLibraryScrollPhase(gameLibraryActivity)
             .transaction { transaction in
                 if transaction.isContinuous || gameLibraryActivity.isScrolling {
@@ -4357,10 +4384,10 @@ struct GameListView: View {
                     )
             }
         }
-        .contentMargins(.top, 0, for: .scrollContent)
+        .contentMarginsCompat(.top, 0)
         .scrollIndicators(.hidden)
         .scrollDisabled(false)
-        .scrollBounceBehavior(.always)
+        .scrollBounceAlwaysCompat()
         .background(
             Group {
                 if hasCustomBackground {
@@ -4445,7 +4472,7 @@ struct GameListView: View {
                             .scaleEffect(displayedNowRunningCardScale)
                             .opacity(displayedNowRunningCardOpacity)
                             .animation(
-                                .smooth(duration: 0.65, extraBounce: 0.04),
+                                .smoothCompat(duration: 0.65, extraBounce: 0.04),
                                 value: displayedNowRunningCardScale
                             )
                             .animation(.linear(duration: 0.65), value: displayedNowRunningCardOpacity)
@@ -4474,7 +4501,7 @@ struct GameListView: View {
                             )
                     }
                     }
-                    .scrollTargetLayout()
+                    .scrollTargetLayoutCompat()
                     .frame(
                         minWidth: max(0, containerSize.width - (horizontalPadding * 2)),
                         minHeight: max(0, availableHeight - (metrics.verticalPadding * 2)),
@@ -4506,7 +4533,7 @@ struct GameListView: View {
                 }
                 .scrollIndicators(.hidden)
                 .scrollDisabled(false)
-                .scrollBounceBehavior(.always, axes: .horizontal)
+                .scrollBounceAlwaysCompat(axes: .horizontal)
                 .trackGameLibraryScrollPhase(gameLibraryActivity)
                 .transaction { transaction in
                     if transaction.isContinuous {
@@ -6624,7 +6651,7 @@ struct GameListView: View {
             priority: 300
         )
         updateControllerScrollAvailability()
-        withAnimation(.smooth(duration: 0.24, extraBounce: 0.03)) {
+        withAnimation(.smoothCompat(duration: 0.24, extraBounce: 0.03)) {
             controllerContextMenuState.gameID = game.id
         }
         if let controllerInput {
@@ -7128,7 +7155,7 @@ struct GameListView: View {
                                 isStopping ? criticalTextColour : accentColour
                             )
                             .font(.title)
-                            .contentTransition(.symbolEffect(.replace))
+                            .symbolReplaceTransitionCompat()
 
                         RunningStatusText(
                             isStopping: isStopping,
@@ -7171,7 +7198,7 @@ struct GameListView: View {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                 )
                 .animation(
-                    .smooth(duration: 0.42, extraBounce: 0.02),
+                    .smoothCompat(duration: 0.42, extraBounce: 0.02),
                     value: isStopping
                 )
             }
@@ -7184,7 +7211,7 @@ struct GameListView: View {
             .opacity(opacity)
             .animation(.linear(duration: 0.65), value: opacity)
             .animation(
-                .smooth(duration: 0.65, extraBounce: 0.04),
+                .smoothCompat(duration: 0.65, extraBounce: 0.04),
                 value: scale
             )
 
@@ -7206,7 +7233,7 @@ struct GameListView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.9)))
                 .animation(.linear(duration: 0.65), value: opacity)
                 .animation(
-                    .smooth(duration: 0.65, extraBounce: 0.04),
+                    .smoothCompat(duration: 0.65, extraBounce: 0.04),
                     value: scale
                 )
                 .modifier(nowRunningControllerFocus(.stop))
@@ -7750,7 +7777,7 @@ struct GameListView: View {
                             + (controllerFocused ? 12 : 0)
                     )
                     .animation(
-                        .smooth(duration: 0.16, extraBounce: 0.02),
+                        .smoothCompat(duration: 0.16, extraBounce: 0.02),
                         value: controllerFocused
                     )
                 }
@@ -8029,7 +8056,7 @@ struct GameListView: View {
             y: controllerFocused ? -resolvedFocusedGameCardLift : 0
         )
         .animation(
-            .smooth(duration: 0.075, extraBounce: 0),
+            .smoothCompat(duration: 0.075, extraBounce: 0),
             value: controllerFocused
         )
         .observeGameLibraryCardLongPress(
@@ -8069,11 +8096,8 @@ struct GameListView: View {
         } label: {
             if settings.favoriteGlowingEffectEnabled {
                 icon
-                    .contentTransition(.symbolEffect)
-                    .symbolEffect(
-                        .bounce,
-                        value: favoriteAnimationValues[game.id, default: 0]
-                    )
+                    .symbolAutomaticTransitionCompat()
+                    .symbolBounceCompat(value: favoriteAnimationValues[game.id, default: 0])
             } else {
                 icon
             }
@@ -8153,7 +8177,7 @@ struct GameListView: View {
                     .foregroundStyle(
                         isStopping ? criticalTextColour : accentColour
                     )
-                    .contentTransition(.symbolEffect(.replace))
+                    .symbolReplaceTransitionCompat()
 
                 RunningStatusText(
                     isStopping: isStopping,
@@ -8203,7 +8227,7 @@ struct GameListView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
         .animation(
-            .smooth(duration: 0.42, extraBounce: 0.02),
+            .smoothCompat(duration: 0.42, extraBounce: 0.02),
             value: isStopping
         )
         .glassSurface(
@@ -8227,7 +8251,7 @@ struct GameListView: View {
                     .foregroundStyle(
                         isStopping ? criticalTextColour : accentColour
                     )
-                    .contentTransition(.symbolEffect(.replace))
+                    .symbolReplaceTransitionCompat()
 
                 RunningStatusText(
                     isStopping: isStopping,
@@ -8279,7 +8303,7 @@ struct GameListView: View {
             )
         )
         .animation(
-            .smooth(duration: 0.42, extraBounce: 0.02),
+            .smoothCompat(duration: 0.42, extraBounce: 0.02),
             value: isStopping
         )
         .glassSurface(
@@ -8934,7 +8958,7 @@ struct GameListView: View {
                 )
             }
             .buttonStyle(.plain)
-            .focusEffectDisabled()
+            .focusEffectDisabledCompat()
             .accessibilityAddTraits(controllerFocused ? .isSelected : [])
             .modifier(
                 GameLibraryControllerFocusModifier(
@@ -9263,7 +9287,7 @@ struct GameListView: View {
         nowRunningCardScale = 1
         nowRunningStatusOpacity = 1
         departingRunningGameName = runningGameName
-        withAnimation(.smooth(duration: 0.42, extraBounce: 0.02)) {
+        withAnimation(.smoothCompat(duration: 0.42, extraBounce: 0.02)) {
             // Enter a visible stopping state immediately after confirmation:
             // play becomes stop, actions dissolve, and both labels morph into
             // one prominent status before the whole glass card leaves.
@@ -9300,7 +9324,7 @@ struct GameListView: View {
                 guard !Task.isCancelled else { return }
             }
 
-            withAnimation(.smooth(duration: 0.52, extraBounce: 0.02)) {
+            withAnimation(.smoothCompat(duration: 0.52, extraBounce: 0.02)) {
                 departingRunningGameName = nil
             }
             try? await Task.sleep(for: .milliseconds(540))
@@ -9415,7 +9439,9 @@ private struct LibraryPerGameSettingsOverlay: View {
     let controllerInput: MenuControllerInputRouter?
     let onDone: () -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GameOverlayContainer(
             frameMode: .landscapePanel,
             dimsBackground: false
@@ -9458,7 +9484,9 @@ private struct GameLibraryForegroundPanel<Content: View>: View {
         self.content = content()
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { proxy in
             let width = min(maximumWidth, max(280, proxy.size.width - 32))
             let height = min(maximumHeight, max(300, proxy.size.height - 32))
@@ -9608,7 +9636,9 @@ private struct GameLibraryViewOptionsPanel: View {
         "library.options.apply",
     ]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             Color.clear
                 .glassSurface(
@@ -10093,7 +10123,9 @@ private struct ExperimentalLibrarySliderRow: View {
 
     @State private var isTouchEditing = false
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(title)
@@ -10149,7 +10181,9 @@ private struct GameInfoPanel: View {
 
     let game: ISOEntry
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             Form {
                 Section {
@@ -10234,7 +10268,9 @@ private struct DiscLinkPicker: View {
     let discs: [ISOEntry]
     let onSelect: (ISOEntry?) -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             List {
                 if discs.isEmpty {

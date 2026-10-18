@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct RetroAchievementsTab: View {
     @Binding var enabled: Bool
@@ -10,7 +11,9 @@ struct RetroAchievementsTab: View {
 
     let settings: SettingsStore
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         PerGameTab(title: settings.localized("RetroAchievements")) {
             Section {
                 Picker(settings.localized("Enable RetroAchievements"), selection: $raEnabledOverride) {

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 private let retroAchievementsNotification = Notification.Name("ARMSX2RetroAchievementsStateChanged")
 
@@ -65,7 +66,9 @@ struct RetroAchievementsSettingsView: View {
         refreshSoon()
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section {
                 Toggle(settings.localized("Enable RetroAchievements"), isOn: Binding(
@@ -440,7 +443,9 @@ private struct RetroAchievementsLoginSheet: View {
         !password.isEmpty
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             Form {
                 Section {
@@ -525,7 +530,7 @@ private struct RetroAchievementsLoginSheet: View {
                 },
                 onCancel: { keyboardField = nil }
             )
-            .presentationBackground(.clear)
+            .presentationBackgroundClearCompat()
             .appStatusBarHidden()
         }
         .interactiveDismissDisabled(loggingIn)

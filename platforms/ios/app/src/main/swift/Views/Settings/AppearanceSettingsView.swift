@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import Perception
 
 struct AppearanceSettingsView: View {
     private enum PresentedEditor: String, Identifiable {
@@ -145,7 +146,9 @@ struct AppearanceSettingsView: View {
         "settings.appearance.reset",
     ]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section {
                 BackgroundAssetRow(
@@ -192,7 +195,7 @@ struct AppearanceSettingsView: View {
                         (id: $0, title: label(for: $0))
                     }
                 )
-                .onChange(of: settings.backgroundFitMode) { _, _ in
+                .onChangeCompat(of: settings.backgroundFitMode) { _, _ in
                     UISelectionFeedbackGenerator().selectionChanged()
                 }
                 .appearanceControllerListRow(
@@ -224,7 +227,7 @@ struct AppearanceSettingsView: View {
                         (id: $0, title: label(for: $0))
                     }
                 )
-                .onChange(of: settings.backgroundLandscapeFitMode) { _, _ in
+                .onChangeCompat(of: settings.backgroundLandscapeFitMode) { _, _ in
                     UISelectionFeedbackGenerator().selectionChanged()
                 }
                 .appearanceControllerListRow(
@@ -1006,7 +1009,7 @@ struct AppearanceSettingsView: View {
         .controllerAccessibilityTargetOrder(Self.controllerTargetOrder)
         // On the Form itself, which reliably reaches its private UIKit list. The
         // pushed-page spacer already clears the tab bar.
-        .contentMargins(.bottom, 0, for: .scrollContent)
+        .contentMarginsCompat(.bottom, 0)
         .background {
             ControllerRightStickScrollTarget(
                 controllerInput: controllerInput,
@@ -1053,7 +1056,7 @@ struct AppearanceSettingsView: View {
                 },
                 onCancel: { showsThemeNameKeyboard = false }
             )
-            .presentationBackground(.clear)
+            .presentationBackgroundClearCompat()
             .appStatusBarHidden()
         }
         .controllerPrompt(
@@ -1096,7 +1099,7 @@ struct AppearanceSettingsView: View {
         .onAppear {
             dynamicPreferences = settings.dynamicAppearancePreferences
         }
-        .onChange(of: settings.dynamicAppearancePreferences) { _, preferences in
+        .onChangeCompat(of: settings.dynamicAppearancePreferences) { _, preferences in
             if presentedEditor == nil { dynamicPreferences = preferences }
         }
         .onDisappear {
@@ -1556,7 +1559,9 @@ private struct AppearanceFrameRateSliderRow: View {
         return "\(requested) \(unit)"
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
                 Label(title, systemImage: systemImage)
@@ -1595,7 +1600,9 @@ private struct NavigationFocusAnimationPreview: View {
     @State private var isAtDestination = false
     @State private var settings = SettingsStore.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Button {
             isAtDestination.toggle()
         } label: {
@@ -1669,7 +1676,9 @@ private struct ControllerCustomColourEditor: View {
         _colour = State(initialValue: initialColor)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             Form {
                 Section {
@@ -1727,7 +1736,9 @@ private struct HintRow: View {
     let icon: String
     let text: String
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: icon).font(.caption).foregroundStyle(.secondary).frame(width: 16)
             Text(text).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)

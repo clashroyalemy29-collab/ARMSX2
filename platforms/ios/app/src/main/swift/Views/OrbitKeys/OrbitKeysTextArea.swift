@@ -2,6 +2,7 @@
 // Dynamic Background sources are intentionally excluded.
 import SwiftUI
 import UIKit
+import Perception
 
 // MARK: - Editor Panel
 
@@ -12,7 +13,9 @@ struct OrbitKeysEditorPanel: View {
   let onSettingsTap: () -> Void
   @Environment(\.uiAccentColour) private var themeAccent
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     VStack(spacing: usesExpandedMetrics ? 10 : 6) {
       HStack(spacing: usesExpandedMetrics ? 9 : 5) {
         OrbitKeysTextField(
@@ -247,7 +250,9 @@ private struct OrbitKeysEditorToolbarFocusModifier: ViewModifier {
   let isSelected: Bool
   @Environment(\.uiAccentColour) private var themeAccent
 
-  func body(content: Content) -> some View {
+  func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+  @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
     content
       .background {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -274,7 +279,9 @@ struct OrbitKeysTextField: View {
   let usesExpandedMetrics: Bool
   @Environment(\.uiAccentColour) private var themeAccent
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     let fieldHeight = usesExpandedMetrics
       ? CGFloat(52)
       : (compact ? CGFloat(22) : 24)

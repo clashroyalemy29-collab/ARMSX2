@@ -3,13 +3,16 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 // MARK: - D-Pad
 struct DPadView: View {
     let size: CGFloat
     @Environment(\.padOpacity) private var padOpacity
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let a = size * 0.42
         let sp = size * 0.29
         ZStack {
@@ -27,7 +30,9 @@ struct ActionButtonsView: View {
     let size: CGFloat
     @Environment(\.padOpacity) private var padOpacity
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let sp = size * 1.1
         ZStack {
             PSBtn(sym: "△", clr: .green, sz: size, btn: .triangle).offset(y: -sp)
@@ -77,7 +82,9 @@ struct PSBtn: View {
         PadLayoutMetrics.touchLength(baseLength: sz, hitScale: hitScaleY)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Group {
             if ARMSX2UsesUIKitPadPressSurface() {
                 ZStack {
@@ -194,7 +201,9 @@ struct PadButtonFace: View {
         PadLayoutMetrics.touchLength(baseLength: baseH, hitScale: hitScaleY)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         centeredButtonFace
     }
 
@@ -281,7 +290,9 @@ struct PadBtn: View {
         PadButtonFace(button: btn, label: label, baseW: w, baseH: h, visibleScaleX: visibleScaleX, visibleScaleY: visibleScaleY, hitScaleX: hitScaleX, hitScaleY: hitScaleY, isPressed: on)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Group {
             if ARMSX2UsesUIKitPadPressSurface() {
                 ZStack {
@@ -357,7 +368,9 @@ struct StickView: View {
     @Environment(\.padSkinDescriptor) private var padSkinDescriptor
     @Environment(\.padUsesFullSkin) private var padUsesFullSkin
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             Circle()
                 .fill(.clear)
@@ -457,7 +470,7 @@ struct StickView: View {
                     }
                 } else {
                     // Drag ended → reset stick
-                    withAnimation(.spring(duration: 0.12)) { off = .zero }
+                    withAnimation(.springCompat(duration: 0.12)) { off = .zero }
                     isLeft ? EmulatorBridge.shared.setLeftStick(x: 0, y: 0)
                            : EmulatorBridge.shared.setRightStick(x: 0, y: 0)
                 }

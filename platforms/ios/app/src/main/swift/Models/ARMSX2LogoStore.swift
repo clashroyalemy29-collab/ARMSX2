@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import Foundation
-import Observation
+import Perception
 import UIKit
 
 enum ARMSX2LogoStoreError: LocalizedError {
@@ -23,7 +23,7 @@ enum ARMSX2LogoStoreError: LocalizedError {
 }
 
 @MainActor
-@Observable
+@Perceptible
 final class ARMSX2LogoStore {
     static let shared = ARMSX2LogoStore()
     static let didChangeNotification = Notification.Name("ARMSX2iOSLogoDidChange")

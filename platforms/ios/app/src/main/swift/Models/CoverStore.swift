@@ -5,6 +5,7 @@ import Foundation
 import ImageIO
 import SwiftUI
 import UniformTypeIdentifiers
+import Perception
 
 struct CoverGameInfo: Sendable {
     let name: String
@@ -28,7 +29,7 @@ struct CoverDownloadSummary: Sendable {
 }
 
 @MainActor
-@Observable
+@Perceptible
 final class CoverStore {
     static let shared = CoverStore()
 

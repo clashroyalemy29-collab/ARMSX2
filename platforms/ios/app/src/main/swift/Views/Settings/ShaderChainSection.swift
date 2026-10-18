@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import Perception
 
 private struct ShaderPackPickerSource: Identifiable {
     let isFolder: Bool
@@ -26,7 +27,9 @@ private struct ShaderPackInstallOptionsView: View {
         "shader-install.cancel",
     ]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             List {
                 installButton(
@@ -51,7 +54,7 @@ private struct ShaderPackInstallOptionsView: View {
             .navigationTitle(localized("Install Shader Pack"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button(localized("Cancel")) { dismiss() }
                         .controllerAccessibilityActionTarget(
                             id: "shader-install.cancel",
@@ -130,7 +133,9 @@ struct ShaderChainSection: View {
 
     private var settings: SettingsStore { SettingsStore.shared }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Group {
             chainSection
             if showsParameters,

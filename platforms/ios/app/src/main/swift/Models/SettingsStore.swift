@@ -3,6 +3,7 @@
 
 import Foundation
 import SwiftUI
+import Perception
 
 /// [P51] OSD preset levels
 enum OsdPreset: Int, CaseIterable {
@@ -223,7 +224,7 @@ extension NumberSetting {
 }
 
 @MainActor
-@Observable
+@Perceptible
 final class SettingsStore {
     static let shared = SettingsStore()
     static let minTargetFPS: Float = 15.0
@@ -250,15 +251,15 @@ final class SettingsStore {
 
     /// Manual EmuCore/Gamefixes toggles — see SettingsStore+GameFixes.swift.
 
-    @ObservationIgnored var suppressINIWrites = false
-    @ObservationIgnored var isProgrammaticOsdFlagChange = false
-    @ObservationIgnored var isAutoMarkingCustom = false
-    @ObservationIgnored var isProgrammaticFramePacingFlagChange = false
-    @ObservationIgnored var isAutoMarkingFramePacingCustom = false
-    @ObservationIgnored var graphicsApplyWorkItem: DispatchWorkItem?
-    @ObservationIgnored var visualSliderDragCount = 0
-    @ObservationIgnored var graphicsApplyDeferred = false
-    @ObservationIgnored var visualSliderWatchdog: DispatchWorkItem?
+    @PerceptionIgnored var suppressINIWrites = false
+    @PerceptionIgnored var isProgrammaticOsdFlagChange = false
+    @PerceptionIgnored var isAutoMarkingCustom = false
+    @PerceptionIgnored var isProgrammaticFramePacingFlagChange = false
+    @PerceptionIgnored var isAutoMarkingFramePacingCustom = false
+    @PerceptionIgnored var graphicsApplyWorkItem: DispatchWorkItem?
+    @PerceptionIgnored var visualSliderDragCount = 0
+    @PerceptionIgnored var graphicsApplyDeferred = false
+    @PerceptionIgnored var visualSliderWatchdog: DispatchWorkItem?
 
     // ── Emulator / CPU ──
     // writes CoreType + UseArm64Dynarec
@@ -1375,8 +1376,8 @@ final class SettingsStore {
     static let stickInversionKeys = ["InvertLeftStickX", "InvertLeftStickY", "InvertRightStickX", "InvertRightStickY"]
     /// Per-game overrides for the game the cache was built from. Only the overridden keys
     /// are stored, so a change to a global still takes effect without rebuilding.
-    @ObservationIgnored private var stickInversionOverrides: [String: Bool] = [:]
-    @ObservationIgnored private var stickInversionOverridesGame = ""
+    @PerceptionIgnored private var stickInversionOverrides: [String: Bool] = [:]
+    @PerceptionIgnored private var stickInversionOverridesGame = ""
 
     /// Effective axis inversion for a stick: the per-game override if there is one, else the
     /// global. Called once per stick sample, so it must not touch the filesystem — the

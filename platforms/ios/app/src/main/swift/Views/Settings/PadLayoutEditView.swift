@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 private struct PadLayoutEditorUndoSnapshot {
     let portrait: [String: PadGroupPosition]
@@ -93,7 +94,9 @@ struct PadLayoutEditView: View {
         context.skinDescriptor ?? skinLibrary.selectedDescriptor
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             let isActuallyLandscape = geo.size.width > geo.size.height
             let isMismatch = isActuallyLandscape != editLandscape
@@ -997,7 +1000,9 @@ private struct DraggableGroup: View {
         )
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let isVisible = layout.isControlVisible(id)
         ZStack {
             RoundedRectangle(cornerRadius: 8)
@@ -1047,20 +1052,19 @@ private struct DraggableGroup: View {
                     dragOffset = .zero
                 }
         )
-        .simultaneousGesture(
-            MagnifyGesture()
-                .onChanged { v in
-                    if !hasPushedSnapshot {
-                        onBeginEdit()
-                        hasPushedSnapshot = true
-                    }
-                    currentScale = v.magnification
+        .simultaneousPinchCompat(
+            onChanged: { magnification in
+                if !hasPushedSnapshot {
+                    onBeginEdit()
+                    hasPushedSnapshot = true
                 }
-                .onEnded { v in
-                    hasPushedSnapshot = false
-                    updateScale(magnification: v.magnification)
-                    currentScale = 1.0
-                }
+                currentScale = magnification
+            },
+            onEnded: { magnification in
+                hasPushedSnapshot = false
+                updateScale(magnification: magnification)
+                currentScale = 1.0
+            }
         )
     }
 
@@ -1165,7 +1169,9 @@ private struct DraggableButton: View {
         )
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let isVisible = layout.isControlVisible(id)
         ZStack {
             RoundedRectangle(cornerRadius: 6)
@@ -1215,20 +1221,19 @@ private struct DraggableButton: View {
                     dragOffset = .zero
                 }
         )
-        .simultaneousGesture(
-            MagnifyGesture()
-                .onChanged { v in
-                    if !hasPushedSnapshot {
-                        onBeginEdit()
-                        hasPushedSnapshot = true
-                    }
-                    currentScale = v.magnification
+        .simultaneousPinchCompat(
+            onChanged: { magnification in
+                if !hasPushedSnapshot {
+                    onBeginEdit()
+                    hasPushedSnapshot = true
                 }
-                .onEnded { v in
-                    hasPushedSnapshot = false
-                    updateScale(magnification: v.magnification)
-                    currentScale = 1.0
-                }
+                currentScale = magnification
+            },
+            onEnded: { magnification in
+                hasPushedSnapshot = false
+                updateScale(magnification: magnification)
+                currentScale = 1.0
+            }
         )
     }
 

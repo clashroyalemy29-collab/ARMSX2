@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct PadTab: View {
     @Binding var padLayoutIdentity: PadLayoutGameIdentity?
@@ -17,7 +18,9 @@ struct PadTab: View {
     private let inversionKeys = SettingsStore.stickInversionKeys
     private let inversionSection = "ARMSX2iOS/UI"
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         PerGameTab(title: "Virtual Pad") {
             Section("Virtual Pad") {
                 if let padLayoutIdentity {

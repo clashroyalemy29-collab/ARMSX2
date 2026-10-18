@@ -4,6 +4,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 @MainActor
 struct OrbitKeysKeyboardView: View {
@@ -40,7 +41,9 @@ struct OrbitKeysKeyboardView: View {
     )
   }
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     GeometryReader { proxy in
       let isWide = proxy.size.width > proxy.size.height * 1.18
       let showsGamePreview = game != nil
@@ -128,7 +131,7 @@ struct OrbitKeysKeyboardView: View {
         }
       }
       .animation(
-        .spring(duration: 0.42, bounce: 0.2),
+        .springCompat(duration: 0.42, bounce: 0.2),
         value: model.usesFullQwerty
       )
       .animation(
@@ -136,14 +139,14 @@ struct OrbitKeysKeyboardView: View {
         value: model.isKeyboardSettingsVisible
       )
       .animation(
-        .spring(duration: 0.38, bounce: 0.26),
+        .springCompat(duration: 0.38, bounce: 0.26),
         value: model.toastMessage
       )
     }
     .preferredColorScheme(.dark)
     .tint(accentColour)
     .onAppear(perform: openKeyboard)
-    .onChange(of: model.isKeyboardVisible, handleVisibilityChange)
+    .onChangeCompat(of: model.isKeyboardVisible, handleVisibilityChange)
     .onDisappear(perform: releaseResources)
     .accessibilityElement(children: .contain)
     .accessibilityLabel(title)

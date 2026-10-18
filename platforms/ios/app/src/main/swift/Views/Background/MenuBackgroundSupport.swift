@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 private extension Notification.Name {
     static let captureMenuBackgroundSnapshot = Notification.Name(
@@ -181,7 +182,9 @@ struct PersistentMenuBackgroundLayer: View {
     @ObservedObject var host: PersistentMenuBackgroundHost
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if host.shouldMountRenderer {
             GeometryReader { geometry in
                 ZStack {
@@ -439,7 +442,9 @@ struct MenuBackgroundLayer: View {
     @Environment(\.menuBackgroundHost) private var persistentHost
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if persistentHost != nil {
             Color.clear
                 .ignoresSafeArea()
@@ -469,7 +474,9 @@ struct OptionalMenuNavigationStack<Content: View>: View {
     }
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if embedded {
             content
         } else {
@@ -493,7 +500,9 @@ struct EmbeddedMenuLargeTitle: View {
     @Environment(\.menuLargeTitleIsSource) private var explicitMorphSource
     @Environment(\.uiTabTitleColour) private var titleTextColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         titleContent
             .modifier(
                 MenuLargeTitleMorphModifier(
@@ -553,7 +562,9 @@ struct EmbeddedMenuCompactTitle: View {
     @Environment(\.menuLargeTitleIsSource) private var explicitMorphSource
     @Environment(\.uiTabTitleColour) private var titleTextColour
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         compactTitle
             .modifier(
                 MenuLargeTitleMorphModifier(
@@ -600,7 +611,9 @@ struct MenuImportActionLabel: View {
         explicitlyFocused ?? targetFocused
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let focusedLabel = Label(title, systemImage: "plus")
             .font(.body.weight(isFocused ? .semibold : .regular))
             .foregroundStyle(isFocused ? accentColour : contentTextColour)
@@ -635,7 +648,9 @@ private struct MenuLargeTitleMorphModifier: ViewModifier {
     let isSource: Bool
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if let namespace {
             // Keep the matched identity installed between transitions. Adding
             // and removing matchedGeometryEffect only after a tab change gives
@@ -671,7 +686,9 @@ private struct MenuToolbarMorphElementModifier: ViewModifier {
     @Environment(\.menuTabIsActive) private var menuTabIsActive
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if let transitionNamespace {
             content
                 .matchedGeometryEffect(
@@ -702,7 +719,9 @@ private struct OptionalMenuNavigationChromeModifier: ViewModifier {
     let embedded: Bool
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if embedded {
             content
         } else {
@@ -718,7 +737,9 @@ private struct OptionalMenuNavigationChromeModifier: ViewModifier {
 
 private struct ClearNavigationContainerBackgroundModifier: ViewModifier {
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if #available(iOS 18.0, *) {
             content.containerBackground(Color.clear, for: .navigation)
         } else {
@@ -732,7 +753,9 @@ private struct ClearNavigationContainerBackgroundModifier: ViewModifier {
 /// another tab is selected.
 private struct StableMenuContentGlassContainerModifier: ViewModifier {
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if #available(iOS 26.0, *) {
             GlassEffectContainer(spacing: 0) {
                 content
@@ -748,7 +771,9 @@ private struct StableMenuContentGlassContainerModifier: ViewModifier {
 /// remaining card to rematerialize its Liquid Glass properties.
 private struct IsolatedMenuGlassContainerModifier: ViewModifier {
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if #available(iOS 26.0, *) {
             GlassEffectContainer(spacing: 0) {
                 content
@@ -764,7 +789,9 @@ struct MenuBackgroundListRowModifier: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if isEnabled {
             content
                 .padding(.horizontal, 12)
@@ -791,7 +818,9 @@ struct GameCardTintMenuBackgroundListRowModifier: ViewModifier {
     let verticalPaddingScale: CGFloat
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if isEnabled {
             content
                 // Clear-glass rows should occupy one consistent column width
@@ -899,7 +928,9 @@ struct SettingsValueStepButtons: View {
     let selectPrevious: () -> Void
     let selectNext: () -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(spacing: 4) {
             stepButton(
                 systemImage: "chevron.left",

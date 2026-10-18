@@ -4,8 +4,7 @@
 import SwiftUI
 import UIKit
 import GameController
-import Observation
-
+import Perception
 private let runtimeMenuStateChangedNotification = Notification.Name("ARMSX2iOSRuntimeMenuStateChanged")
 private let retroAchievementsToastNotification = Notification.Name("ARMSX2RetroAchievementsNotification")
 
@@ -41,7 +40,7 @@ private struct RetroAchievementsToast: Equatable {
 /// the only view which observes this object, so holding Left/Right no longer invalidates Metal,
 /// virtual-pad, Quick Menu, and overlay layout on every repeated percentage step.
 @MainActor
-@Observable
+@Perceptible
 private final class PerGameLivePreviewToastState {
     private(set) var status: PerGameLivePreviewStatus?
 
@@ -66,7 +65,9 @@ private struct GameScreenStatusToastOverlay: View {
     let bottomPadding: CGFloat
     let horizontalPadding: CGFloat
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if let message = livePreview?.status?.value ?? fallback.content {
             Text(message)
                 .font(.callout.weight(.semibold))
@@ -100,7 +101,9 @@ private struct PerGameLivePreviewExitOverlay: View {
     @Environment(\.uiContentTextColour) private var textColour
     @State private var exitRequested = false
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack(alignment: .top) {
             Color.clear
                 .contentShape(Rectangle())
@@ -144,7 +147,7 @@ private struct PerGameLivePreviewExitOverlay: View {
                 priority: 1_000
             )
         }
-        .onChange(of: controllerInput?.latestEvent) { _, event in
+        .onChangeCompat(of: controllerInput?.latestEvent) { _, event in
             guard let event,
                   event.captureOwner
                     == MenuControllerNavigationCaptureOwner
@@ -240,7 +243,9 @@ struct EmulationOnlyGameView: View {
     @State private var touchActionSession = VirtualPadTouchActionSession()
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if appState.emulationOnlyPresentation == .minimal {
             PhoneGameSurface()
                 .ignoresSafeArea()
@@ -658,7 +663,9 @@ struct GameScreenView: View {
 
     // MARK: - Body
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
             // The window. A keyboard shrinks the safe region until iPad portrait reads wide.
             let screen = CGSize(
@@ -751,7 +758,7 @@ struct GameScreenView: View {
             }
             .preference(key: GameScreenSizePreferenceKey.self, value: screen)
             // Off the safe region, not the preference: the status bar moves one, not the other.
-            .onChange(of: geo.size) { _, _ in syncFullscreenStateFromWindow() }
+            .onChangeCompat(of: geo.size) { _, _ in syncFullscreenStateFromWindow() }
         }
         // An overlay owns focus; the pad and menu button under it stay out of reach.
         .accessibilityHidden(overlayRoute != .hidden)
@@ -839,7 +846,7 @@ struct GameScreenView: View {
             leaveGameplaySystemChromeMode()
         }
         // VM pause follows `overlayRoute` alone: any route but `.hidden` keeps it paused.
-        .onChange(of: overlayRoute) { _, route in
+        .onChangeCompat(of: overlayRoute) { _, route in
             if route == .hidden { pauseMenuChild = nil }
             if route == .paused {
                 // Child dismissal and background re-entry can expose the pause
@@ -850,10 +857,10 @@ struct GameScreenView: View {
             updateRuntimeControllerMenuOwnership()
             scheduleInactiveQuickMenuResourceRelease(for: route)
         }
-        .onChange(of: saveStateShortcutOperationActive) { _, _ in
+        .onChangeCompat(of: saveStateShortcutOperationActive) { _, _ in
             updateRuntimeOverlayPause()
         }
-        .onChange(of: controllerInput?.latestQuickPauseRequest) { _, request in
+        .onChangeCompat(of: controllerInput?.latestQuickPauseRequest) { _, request in
             guard request != nil,
                   overlayRoute == .hidden,
                   !saveStateShortcutOperationActive else { return }
@@ -863,7 +870,7 @@ struct GameScreenView: View {
             refreshRuntimeMenuState()
             overlayRoute = .paused
         }
-        .onChange(of: controllerInput?.latestEmulationShortcutRequest) { _, request in
+        .onChangeCompat(of: controllerInput?.latestEmulationShortcutRequest) { _, request in
             guard let request else { return }
             handleEmulationControllerShortcut(request.shortcut)
         }
@@ -881,20 +888,20 @@ struct GameScreenView: View {
             }
             wasBackgrounded = false
         }
-        .onChange(of: fullScreen) { _, isEnabled in
+        .onChangeCompat(of: fullScreen) { _, isEnabled in
             applyFullscreenState(isEnabled)
         }
-        .onChange(of: appState.gameplayLaunchTransition?.id) { previous, current in
+        .onChangeCompat(of: appState.gameplayLaunchTransition?.id) { previous, current in
             // The gameplay view mounts underneath the live card transition.
             // Keep system chrome stable until that transition has completely
             // faded away, then apply the user's gameplay preference.
             guard previous != nil, current == nil else { return }
             applyFullscreenState(fullScreen)
         }
-        .onChange(of: settings.hideGameplayStatusBar) { _, _ in
+        .onChangeCompat(of: settings.hideGameplayStatusBar) { _, _ in
             updateGameplayStatusBar(forFullscreen: fullScreen)
         }
-        .onChange(of: settings.hideMenuButton) { _, isHidden in
+        .onChangeCompat(of: settings.hideMenuButton) { _, isHidden in
             // Keep the runtime menu-button flag in lockstep with the persisted setting so
             // re-enabling it (from the quick menu or settings) restores the button at once.
             if menuButtonHidden != isHidden {
@@ -902,14 +909,14 @@ struct GameScreenView: View {
             }
             cancelMenuButtonReveal()
         }
-        .onChange(of: settings.emulationOnlyModeEnabled) { _, isEnabled in
+        .onChangeCompat(of: settings.emulationOnlyModeEnabled) { _, isEnabled in
             if isEnabled {
                 enterEmulationOnlyModeIfReady()
             } else {
                 cancelEmulationOnlyTransition()
             }
         }
-        .onChange(of: appState.emulationOnlyStartupReady) { _, isReady in
+        .onChangeCompat(of: appState.emulationOnlyStartupReady) { _, isReady in
             if isReady {
                 enterEmulationOnlyModeIfReady()
             }
@@ -937,11 +944,11 @@ struct GameScreenView: View {
         .onReceive(NotificationCenter.default.publisher(for: retroAchievementsToastNotification)) { _ in
             consumePendingRetroAchievementsToast()
         }
-        .onChange(of: statusBanner.generation) { oldGeneration, newGeneration in
+        .onChangeCompat(of: statusBanner.generation) { oldGeneration, newGeneration in
             guard newGeneration > oldGeneration else { return }
             MenuAudioPackManager.shared.playEvent(.uiToast)
         }
-        .onChange(of: achievementsBanner.generation) { oldGeneration, newGeneration in
+        .onChangeCompat(of: achievementsBanner.generation) { oldGeneration, newGeneration in
             guard newGeneration > oldGeneration else { return }
             MenuAudioPackManager.shared.playEvent(.achievementToast)
         }
@@ -1374,7 +1381,7 @@ struct GameScreenView: View {
             }
         } else {
             NavigationStack {
-                ContentUnavailableView(
+                ContentUnavailableCompat(
                     settings.localized("No Game Active"),
                     systemImage: "gamecontroller",
                     description: Text(settings.localized("Start a game before changing per-game settings."))
@@ -2253,10 +2260,10 @@ struct GameScreenView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .onChange(of: saveStateUndo.item?.id) { _, id in
+        .onChangeCompat(of: saveStateUndo.item?.id) { _, id in
             controllerInput?.saveStateUndoPending = id != nil
         }
-        .onChange(of: controllerInput?.saveStateUndoRequest) { _, _ in
+        .onChangeCompat(of: controllerInput?.saveStateUndoRequest) { _, _ in
             undoSaveStateAction()
         }
         .task(id: appState.emulationSessionID) {
@@ -2512,7 +2519,9 @@ private struct RetroAchievementsGamePanel: View {
     @State private var entries: [RetroAchievementEntry] = []
     @State private var state: [String: Any] = [:]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             List {
                 summarySection
@@ -2538,7 +2547,7 @@ private struct RetroAchievementsGamePanel: View {
             }
             .navigationTitle(settings.localized("RetroAchievements"))
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button(settings.localized("Done")) {
                         dismiss()
                     }
@@ -2707,7 +2716,9 @@ private struct RetroAchievementRow: View {
     let entry: RetroAchievementEntry
     let settings: SettingsStore
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         HStack(alignment: .top, spacing: 12) {
             badge
 
@@ -2799,7 +2810,7 @@ private struct RetroAchievementRow: View {
 // MARK: - Speed Control Panel
 
 private struct SpeedControlPanel: View {
-    @Bindable var settings: SettingsStore
+    @Perception.Bindable var settings: SettingsStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.menuControllerInputRouter) private var controllerInput
     @State private var hardcoreActive = false
@@ -2811,7 +2822,9 @@ private struct SpeedControlPanel: View {
         "runtime.speed.scalar",
     ]
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         NavigationStack {
             Form {
                 Section(settings.localized("Fast Forward")) {

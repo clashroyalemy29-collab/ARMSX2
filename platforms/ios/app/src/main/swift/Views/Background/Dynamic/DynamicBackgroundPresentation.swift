@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 private struct ClearLiquidGlassUIEnvironmentKey: EnvironmentKey {
     static let defaultValue = true
@@ -21,7 +22,9 @@ extension EnvironmentValues {
 private struct QuickMenuLiquidGlassConfigurationModifier: ViewModifier {
     @State private var settings = SettingsStore.shared
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content.environment(
             \.clearLiquidGlassUIEnabled,
             settings.clearLiquidGlassUIQuickMenu
@@ -45,7 +48,9 @@ extension View {
 private struct LightweightLiveWallpaperPresentationModifier: ViewModifier {
     @State private var acquiredOverride = false
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
             .onAppear {
                 guard !acquiredOverride else { return }
@@ -67,7 +72,9 @@ struct DynamicBackgroundRendererView: View {
     var allowsMainMenuThermalFallback = false
     @State private var isRenderingEnabled = true
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Group {
             if isRenderingEnabled {
                 let theme = DynamicBackgroundTheme(preferences: preferences)
@@ -205,7 +212,9 @@ private struct DynamicBackgroundStyleCrossfadeView: View {
         _activeLayerID = State(initialValue: id)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geometry in
             ZStack {
                 ForEach(layers) { layer in
@@ -234,7 +243,7 @@ private struct DynamicBackgroundStyleCrossfadeView: View {
             .clipped()
         }
         .ignoresSafeArea()
-        .onChange(of: requestedPresentation) { _, next in
+        .onChangeCompat(of: requestedPresentation) { _, next in
             updatePresentation(to: next)
         }
     }
@@ -347,7 +356,9 @@ struct ResolutionAwareDynamicBackgroundContentView: View {
     @State private var frameRates = UIFrameRateSettings.shared
     @State private var thermalState = ProcessInfo.processInfo.thermalState
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let configuration = frameRates.configuration(
             usingLightweightLiveWallpaperQuality:
                 shouldUseLightweightThermalQuality
@@ -400,7 +411,9 @@ struct DynamicWallpaperSwiftUIRenderSurfaceModifier: ViewModifier {
     @Environment(\.uiFrameRateConfiguration) private var frameRates
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         let scale = CGFloat(
             usesFaceButtonResolution
                 ? frameRates.dynamicFaceButtonRenderScale
@@ -488,7 +501,9 @@ struct DynamicWallpaperCanvas: View {
         self.renderer = renderer
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geometry in
             let scale = CGFloat(
                 usesWallpaperRenderScale
@@ -532,7 +547,9 @@ struct DynamicBackgroundContentView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if reduceMotion {
             StaticDynamicBackgroundView(theme: theme)
         } else {
@@ -545,7 +562,9 @@ struct DynamicBackgroundContentView: View {
 private struct StaticDynamicBackgroundView: View {
     let theme: DynamicBackgroundTheme
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let deep = theme.sharedColor(index: 0, time: 0)
         let middle = theme.sharedColor(index: 1, time: 0)
         let accent = theme.ribbonColor(index: 2, time: 0)
@@ -594,7 +613,9 @@ struct DynamicBackgroundAppearanceSections: View {
     @Binding var preferences: DynamicAppearancePreferences
     let showPaletteEditor: () -> Void
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Section {
             // Like the other appearance controls, this marks the choice as the player's,
             // so the automatic no-JIT theme leaves it alone.
@@ -893,7 +914,9 @@ private struct DynamicBackgroundDensityRow: View {
         "\(Int((value * 100).rounded()))%"
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
                 Label(title, systemImage: systemImage)
@@ -970,7 +993,9 @@ private struct DynamicBackgroundGlassSurfaceModifier: ViewModifier {
     let cornerRadius: CGFloat
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         let usesClearGlass = clear && (forceClear || clearLiquidGlassUIEnabled)
         if !isEnabled {
             // Glass is a compositor effect, not layout. Far-offscreen lazy

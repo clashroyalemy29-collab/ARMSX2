@@ -2,12 +2,15 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct PerGameTab<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             content
         }
@@ -32,7 +35,9 @@ private struct PerGameRightStickScroll: ViewModifier {
     @Environment(\.controllerAccessibilityTargetsSuppressed)
     private var controllerTargetsSuppressed
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content.background {
             // Keep the analog-scroll owner alive independently of lazy Form
             // cells. Its full-pane bounds let the local UIKit lookup resolve

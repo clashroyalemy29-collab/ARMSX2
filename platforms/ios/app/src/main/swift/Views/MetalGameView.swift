@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 struct MetalGameView: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
@@ -31,7 +32,9 @@ struct MetalGameView: UIViewRepresentable {
 struct PhoneGameSurface: View {
     @State private var appState = AppState.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if appState.externalDisplayConnected {
             Color.black
         } else {
@@ -45,7 +48,9 @@ struct ExternalGameDisplayView: View {
     @State private var appState = AppState.shared
     @State private var settings = SettingsStore.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             Color.black
             if case .playing = appState.currentScreen {

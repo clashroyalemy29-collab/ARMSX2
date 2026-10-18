@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct FramePacingTab: View {
     @Binding var enabled: Bool
@@ -20,7 +21,9 @@ struct FramePacingTab: View {
     // Triggers the parent's reset confirmation dialog.
     @Binding var showResetConfirmation: Bool
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         PerGameTab(title: settings.localized("Frame Pacing")) {
             if showsCustomDirtyCaption {
                 Text(settings.localized("You've changed individual settings. Pick a preset to return to its values."))

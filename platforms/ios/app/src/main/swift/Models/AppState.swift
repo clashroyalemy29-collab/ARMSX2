@@ -3,6 +3,7 @@
 
 import SwiftUI
 import UIKit
+import Perception
 
 enum GameplayLaunchCardStyle: Equatable {
     case list
@@ -47,7 +48,7 @@ struct EmulationOnlyPresentation: Equatable {
     static let minimal = EmulationOnlyPresentation()
 }
 
-@Observable
+@Perceptible
 final class AppState: @unchecked Sendable {
     static let shared = AppState()
     static let systemChromeNeedsUpdateNotification = Notification.Name("ARMSX2iOSSystemChromeNeedsUpdate")
@@ -70,7 +71,7 @@ final class AppState: @unchecked Sendable {
     var pendingRestartGame: String?
     var pendingLibraryExport: String?
     private(set) var automaticGameStartupPending: Bool
-    @ObservationIgnored private var automaticGameStartupStarted = false
+    @PerceptionIgnored private var automaticGameStartupStarted = false
     var gameplayLaunchTransition: GameplayLaunchTransition?
     var gameplayLaunchControlsVisible = true
     var gameplayLaunchBackgroundVisible = false
@@ -105,13 +106,13 @@ final class AppState: @unchecked Sendable {
         }
     }
 
-    @ObservationIgnored private var systemChromeNotificationsEnabled = false
-    @ObservationIgnored private var pendingBootAction: (() -> Void)?
-    @ObservationIgnored private var leaveSave = 0
-    @ObservationIgnored private var shutdownObserver: NSObjectProtocol?
+    @PerceptionIgnored private var systemChromeNotificationsEnabled = false
+    @PerceptionIgnored private var pendingBootAction: (() -> Void)?
+    @PerceptionIgnored private var leaveSave = 0
+    @PerceptionIgnored private var shutdownObserver: NSObjectProtocol?
 
-    @ObservationIgnored private var autoBootObserver: NSObjectProtocol?
-    @ObservationIgnored private var emulationOnlyStartupReadyObserver: NSObjectProtocol?
+    @PerceptionIgnored private var autoBootObserver: NSObjectProtocol?
+    @PerceptionIgnored private var emulationOnlyStartupReadyObserver: NSObjectProtocol?
 
     private init() {
         // Read only persisted boot policy here, never SettingsStore.shared:

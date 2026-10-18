@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 struct TexturesTab: View {
     @Binding var enabled: Bool
@@ -13,7 +14,9 @@ struct TexturesTab: View {
     let serial: String
     let settings: SettingsStore
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         TexturePacksView(serial: serial, controllerTargets: $controllerTargets) {
             Section(settings.localized("Texture Replacement")) {
                 override("Load Replacement Textures", id: "per-game.textures.load-replacement-textures",

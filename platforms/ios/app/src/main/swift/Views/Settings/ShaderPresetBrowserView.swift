@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 /// A constant id, so a re-running host body keeps the browser's search field and keyboard.
 struct ShaderPresetBrowserRequest: Identifiable {
@@ -30,7 +31,9 @@ struct ShaderPresetBrowserView: View {
     @State private var selectedFolder: ShaderPresetFolder?
     @State private var showsDownloadManager = false
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         List {
             if !scanned {
                 HStack { Spacer(); ProgressView(); Spacer() }
@@ -311,12 +314,14 @@ private struct ShaderDownloadManagerView: View {
     @State private var deletionFailure: ShaderDeletionFailure?
     @State private var completionText: String?
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         List {
             if isLoading {
                 HStack { Spacer(); ProgressView(); Spacer() }
             } else if downloads.isEmpty {
-                ContentUnavailableView(
+                ContentUnavailableCompat(
                     localized("No Downloaded Shaders"),
                     systemImage: "square.stack.3d.up.slash",
                     description: Text(localized(

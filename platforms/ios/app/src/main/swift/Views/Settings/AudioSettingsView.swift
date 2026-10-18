@@ -4,6 +4,7 @@
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
+import Perception
 
 private struct AudioPackMessage: Identifiable {
     let id = UUID()
@@ -25,7 +26,9 @@ struct AudioSettingsView: View {
     @State private var isRemoveConfirmationPresented = false
     @State private var audioPackMessage: AudioPackMessage?
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         Form {
             Section {
                 NumberRow(.emulatorVolume, value: $settings.emulatorVolumePercent,
@@ -107,7 +110,7 @@ struct AudioSettingsView: View {
             message: audioPackMessage?.detail ?? "",
             actions: [.ok]
         )
-        .onChange(of: audioPackMessage?.id) { _, messageID in
+        .onChangeCompat(of: audioPackMessage?.id) { _, messageID in
             guard messageID != nil else { return }
             MenuAudioPackManager.shared.playEvent(.uiToast)
             controllerInput?.playTouchHaptics(.contextMenu)

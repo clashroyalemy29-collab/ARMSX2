@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0+
 
 import SwiftUI
+import Perception
 
 private struct UIAccentColourEnvironmentKey: EnvironmentKey {
     static let defaultValue = Color.blue
@@ -187,7 +188,9 @@ struct UIAccentIconLabelStyle: LabelStyle {
 private struct UICriticalForegroundStyleModifier: ViewModifier {
     @Environment(\.uiCriticalTextColour) private var criticalTextColour
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content.foregroundStyle(criticalTextColour)
     }
 }
@@ -229,7 +232,9 @@ struct ControllerTextAppearance {
 private struct UISecondaryForegroundStyleModifier: ViewModifier {
     let color: Color?
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         // Keep one view identity when a theme changes between the system
         // foreground and an explicit palette colour. A conditional branch here
         // used to replace RootView's complete subtree; the retiring branch then
@@ -662,7 +667,9 @@ struct ControllerNavigationOrbField: View {
 
     private let particles = ControllerNavigationOrbParticle.standard
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { proxy in
             AdaptiveAnimationTimeline(
                 domain: .controllerEffects,
@@ -711,7 +718,7 @@ struct ControllerNavigationOrbField: View {
                 )
             ]
         }
-        .onChange(of: speedMultiplier) { _, newValue in
+        .onChangeCompat(of: speedMultiplier) { _, newValue in
             guard phaseTimeOverride == nil else { return }
             let now = Date.timeIntervalSinceReferenceDate
             speedPrograms.append(
@@ -724,7 +731,7 @@ struct ControllerNavigationOrbField: View {
             )
             trimPrograms(&speedPrograms, limit: 32)
         }
-        .onChange(of: dispersion) { _, newValue in
+        .onChangeCompat(of: dispersion) { _, newValue in
             guard dispersionOverride == nil else { return }
             let now = Date.timeIntervalSinceReferenceDate
             dispersionPrograms.append(
@@ -737,7 +744,7 @@ struct ControllerNavigationOrbField: View {
             )
             trimPrograms(&dispersionPrograms, limit: 32)
         }
-        .onChange(of: reaction) { _, newValue in
+        .onChangeCompat(of: reaction) { _, newValue in
             guard reactionStateOverride == nil,
                   let newValue,
                   !reduceMotion else { return }
@@ -2639,7 +2646,9 @@ struct ControllerFocusBox: View {
     @State private var gameCoverThemePreview = GameCoverThemePreviewStore.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { proxy in
             AdaptiveAnimationTimeline(
                 domain: .controllerEffects,
@@ -2683,7 +2692,9 @@ struct ControllerBottomNavigationFocusGlow: View {
     @State private var settings = SettingsStore.shared
     @State private var gameCoverThemePreview = GameCoverThemePreviewStore.shared
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { proxy in
             let paletteColors = gameCoverThemePreview.preview.map {
                 $0.backgroundPalette.gradientColors
@@ -2734,7 +2745,9 @@ private struct ControllerFocusBoxDepthPresentationModifier: ViewModifier {
     @Environment(\.controllerNavigationDepthEffectEnabled)
     private var depthEffectEnabled
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
             .background {
                 if isVisible && depthEffectEnabled {
@@ -2771,7 +2784,9 @@ private struct ControllerFocusDepthAnchorModifier: ViewModifier {
     @Environment(\.controllerNavigationDepthEffectEnabled)
     private var depthEffectEnabled
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content.anchorPreference(
             key: ControllerFocusDepthAnchorPreferenceKey.self,
             value: .bounds
@@ -2798,7 +2813,9 @@ private struct ControllerFocusDepthBehindGlassModifier: ViewModifier {
     @Environment(\.uiAccentColour)
     private var accentColour
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content.backgroundPreferenceValue(
             ControllerFocusDepthAnchorPreferenceKey.self
         ) { anchors in
@@ -2882,7 +2899,9 @@ private struct ControllerFocusBoxPresentationModifier: ViewModifier {
     let cornerRadius: CGFloat
     let performanceOptimized: Bool
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content
             .modifier(
                 ControllerFocusBoxDepthPresentationModifier(
@@ -2910,7 +2929,9 @@ private struct ControllerFocusBoxForegroundPresentationModifier:
     let cornerRadius: CGFloat
     let performanceOptimized: Bool
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content.overlay {
             if isVisible {
                 ControllerFocusBox(
@@ -3031,7 +3052,9 @@ struct ControllerFocusBoxArtwork: View {
     }
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         switch style {
         case .neonBlue:
             shape
@@ -3914,7 +3937,9 @@ struct ControllerNavigationAnimatedOrbField: View {
         return frameRates.configuration.interval(for: domain)
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack(alignment: .topLeading) {
             if showsOrbs {
                 orbTimeline
@@ -3929,27 +3954,27 @@ struct ControllerNavigationAnimatedOrbField: View {
             retarget(to: MotionTarget(id: targetID, frame: targetFrame))
             updateOrbActivity(isEnabled: showsOrbs)
         }
-        .onChange(of: MotionTarget(id: targetID, frame: targetFrame)) { _, next in
+        .onChangeCompat(of: MotionTarget(id: targetID, frame: targetFrame)) { _, next in
             retarget(to: next)
         }
-        .onChange(of: tracksTargetFrameDirectly) { _, tracksDirectly in
+        .onChangeCompat(of: tracksTargetFrameDirectly) { _, tracksDirectly in
             guard tracksDirectly else { return }
             retarget(to: MotionTarget(id: targetID, frame: targetFrame))
         }
-        .onChange(of: resolvedFocusTravelStyle) { _, _ in
+        .onChangeCompat(of: resolvedFocusTravelStyle) { _, _ in
             // Settle an in-flight effect before the new choice takes over.
             // The session still owns any currently scrolling geometry.
             setFrameDirectly(targetFrame, at: Date.timeIntervalSinceReferenceDate)
         }
-        .onChange(of: reduceMotion) { _, reducesMotion in
+        .onChangeCompat(of: reduceMotion) { _, reducesMotion in
             if reducesMotion {
                 setFrameDirectly(targetFrame, at: Date.timeIntervalSinceReferenceDate)
             }
         }
-        .onChange(of: showsOrbs) { _, isEnabled in
+        .onChangeCompat(of: showsOrbs) { _, isEnabled in
             updateOrbActivity(isEnabled: isEnabled)
         }
-        .onChange(of: showsOrbs ? resolvedInteraction : nil) { _, interaction in
+        .onChangeCompat(of: showsOrbs ? resolvedInteraction : nil) { _, interaction in
             guard let interaction else { return }
             react(to: interaction.command)
         }
@@ -4617,7 +4642,9 @@ private struct ControllerNavigationMovingOrbOverlay: View {
     @State private var isVisible = false
     @State private var removalTask: Task<Void, Never>?
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack(alignment: .topLeading) {
             if let displayedTarget, displayedTarget.id.hasPrefix("tab-bar.") {
                 ControllerNavigationAnimatedOrbField(
@@ -4651,7 +4678,7 @@ private struct ControllerNavigationMovingOrbOverlay: View {
         .onAppear {
             updateDisplayedTarget(target)
         }
-        .onChange(of: target) { _, next in
+        .onChangeCompat(of: target) { _, next in
             updateDisplayedTarget(next)
         }
         .onDisappear {
@@ -4711,7 +4738,9 @@ private struct ControllerNavigationOrbTargetModifier: ViewModifier {
     let priority: Int
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         if isEnabled {
             content.anchorPreference(
                 key: ControllerNavigationOrbAnchorPreferenceKey.self,
@@ -4740,7 +4769,9 @@ private struct ControllerNavigationOrbTargetModifier: ViewModifier {
 private struct ControllerNavigationOrbOverlayHostModifier: ViewModifier {
     let controllerInput: MenuControllerInputRouter?
 
-    func body(content: Content) -> some View {
+    func body(content: Content) -> some View { WithPerceptionTracking { perceptionBodyContent(content) } }
+
+    @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         content.overlayPreferenceValue(
             ControllerNavigationOrbAnchorPreferenceKey.self
         ) { target in
@@ -4872,7 +4903,9 @@ private struct ControllerNavigationGlassOrb: View {
     }
 
     @ViewBuilder
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         if #available(iOS 26.0, *), usesGlass {
             core
                 .glassEffect(

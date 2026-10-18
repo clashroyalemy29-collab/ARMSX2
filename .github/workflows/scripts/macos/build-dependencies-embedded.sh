@@ -57,7 +57,7 @@ fi
 # one. The default is for running this script by hand - 17.4 matches the iOS app
 # in platforms/ios, and tvOS takes the same number, which is a real tvOS release
 # too.
-: ${APPLE_DEPLOYMENT_TARGET:=17.4}
+: ${APPLE_DEPLOYMENT_TARGET:=16.0}
 
 FREETYPE=2.14.3
 SDL=SDL3-3.4.12

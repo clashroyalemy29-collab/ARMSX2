@@ -5,6 +5,7 @@ import CoreMotion
 import QuartzCore
 import SwiftUI
 import UIKit
+import Perception
 
 struct DynamicThumbstickVector: Equatable, Sendable {
     var x: CGFloat
@@ -130,7 +131,9 @@ struct DynamicThumbstickView: View {
     @State private var gestureStartedAt: Date?
     @State private var maximumTravel: CGFloat = 0
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { _ in
             ZStack(alignment: .topLeading) {
                 Color.clear
@@ -261,7 +264,9 @@ private struct DynamicThumbstickVisual: View {
 
     @State private var maximumPullPulseProgress: CGFloat = 0
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             ForEach(0..<7, id: \.self) { index in
                 let scale = DynamicThumbstickMath.trailDotScale(index: index, rawDistance: dragDistance, maximumRadius: maximumRadius)
@@ -347,7 +352,9 @@ struct VirtualPadCameraSwipeView: View {
     @State private var dynamicJoystickPeakTravel: CGFloat = 0
     @State private var previousRadialTravel: CGFloat = 0
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { _ in
             ZStack(alignment: .topLeading) {
                 Color.clear
@@ -772,7 +779,7 @@ func pulseVirtualPadActionButton(
 }
 
 @MainActor
-@Observable
+@Perceptible
 final class DynamicCrosshairRuntimeState {
     private(set) var isAiming = false
     private(set) var isSwipeCrosshairVisible = false
@@ -788,10 +795,10 @@ final class DynamicCrosshairRuntimeState {
     private(set) var shotTiltRadians: CGFloat = 0
     private(set) var rapidFireStartedAt = 0.0
 
-    @ObservationIgnored private var sourceMotion: [DynamicCrosshairMotionSource: DynamicThumbstickVector] = [:]
-    @ObservationIgnored private var settlingTask: Task<Void, Never>?
-    @ObservationIgnored private var shotTask: Task<Void, Never>?
-    @ObservationIgnored private var swipeHideTask: Task<Void, Never>?
+    @PerceptionIgnored private var sourceMotion: [DynamicCrosshairMotionSource: DynamicThumbstickVector] = [:]
+    @PerceptionIgnored private var settlingTask: Task<Void, Never>?
+    @PerceptionIgnored private var shotTask: Task<Void, Never>?
+    @PerceptionIgnored private var swipeHideTask: Task<Void, Never>?
 
     func setAiming(_ aiming: Bool) {
         isAiming = aiming
@@ -1290,7 +1297,9 @@ struct DynamicAimCrosshairOverlay: View {
         return nil
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
             if settings.dynamicCrosshairEnabled, let activeRuntime {
                 DynamicAimCrosshairView(
@@ -1319,7 +1328,9 @@ private struct DynamicAimCrosshairView: View {
     let configuredOpacity: CGFloat
     let runtime: DynamicCrosshairRuntimeState
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         let isAnimating = runtime.isCameraMoving ||
             runtime.isCameraSettling ||
             runtime.isShooting ||

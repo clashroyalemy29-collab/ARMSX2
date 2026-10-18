@@ -3,6 +3,7 @@
 
 import SwiftUI
 import AVKit
+import Perception
 
 /// Retains only the playhead for each configured local background video while
 /// iOS temporarily dismantles the inactive renderer. Gameplay teardown clears
@@ -32,7 +33,9 @@ struct VideoBackgroundView: View {
     let muted: Bool
     let fitMode: BackgroundFitMode
 
-    var body: some View { VideoBackgroundPlayer(url: url, muted: muted, fitMode: fitMode) }
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View { VideoBackgroundPlayer(url: url, muted: muted, fitMode: fitMode) }
 }
 
 private struct VideoBackgroundPlayer: UIViewRepresentable {

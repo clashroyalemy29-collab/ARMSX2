@@ -5,6 +5,7 @@ import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
 import UIKit
+import Perception
 
 private enum PerGameControllerAlertKind: Equatable {
     case resetAll
@@ -138,7 +139,9 @@ struct PerGameSettingsPanel: View {
         @Environment(\.uiAccentColour) private var accentColour
         @Environment(\.controllerTextAppearance) private var textAppearance
 
-        var body: some View {
+        var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+        @MainActor @ViewBuilder private var perceptionBodyContent: some View {
             HStack(spacing: 10) {
                 Image(systemName: systemImage)
                     .frame(width: OverlayTheme.rowIconWidth)
@@ -697,7 +700,9 @@ struct PerGameSettingsPanel: View {
         return settings.gameFixEnabled("OPHFlagHack")
     }
 
-    var body: some View {
+    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+    @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         OverlayPanelScaffold(usesRegularGlass: true) {
             GeometryReader { geo in
                 // Rail and detail pane on a wide card, NavigationStack form on a tall one.
@@ -719,7 +724,7 @@ struct PerGameSettingsPanel: View {
             // Recreate probes and the navigation scope atomically at rotation
             // so Cross can never activate a retained control from the old tree.
             .id(layout)
-            .onChange(of: layout) { _, _ in
+            .onChangeCompat(of: layout) { _, _ in
                 selectedControllerDetail = nil
             }
             .controllerAccessibilityTargetOrder(
@@ -818,19 +823,19 @@ struct PerGameSettingsPanel: View {
         }
         .allowsHitTesting(!livePreviewSessionIsFinishing)
         .tint(accentColour)
-        .onChange(of: hasPendingChanges) { _, pending in
+        .onChangeCompat(of: hasPendingChanges) { _, pending in
             if pending {
                 saveFeedbackVisible = false
             }
         }
-        .onChange(of: activeControllerAlertKind) { previous, kind in
+        .onChangeCompat(of: activeControllerAlertKind) { previous, kind in
             guard let kind, kind != previous else { return }
             MenuAudioPackManager.shared.playEvent(.uiToast)
         }
         .onAppear {
             beginLivePreviewSessionIfNeeded()
         }
-        .onChange(of: perGameLivePreviewFingerprint()) { _, fingerprint in
+        .onChangeCompat(of: perGameLivePreviewFingerprint()) { _, fingerprint in
             if suppressNextLivePreviewChange {
                 suppressNextLivePreviewChange = false
                 lastPreviewedFingerprint = fingerprint
@@ -838,14 +843,14 @@ struct PerGameSettingsPanel: View {
             }
             scheduleLivePreview(for: fingerprint)
         }
-        .onChange(of: livePreviewDismissRequest) { _, _ in
+        .onChangeCompat(of: livePreviewDismissRequest) { _, _ in
             guard livePreviewPresentation.hidesSettingsUI else { return }
             // The presentation owner captured this button before it could
             // reach the hidden editor. Cancelling joins any in-flight native
             // apply, restores the temporal state, and remounts the panel.
             livePreviewTask?.cancel()
         }
-        .onChange(of: settings.temporalSaveStateToLivePreviewChanges) {
+        .onChangeCompat(of: settings.temporalSaveStateToLivePreviewChanges) {
             _, enabled in
             if enabled {
                 if livePreviewToken == nil {
@@ -991,7 +996,7 @@ struct PerGameSettingsPanel: View {
                             .navigationBarTitleDisplayMode(.inline)
                             .navigationBarBackButtonHidden(true)
                             .toolbar {
-                                ToolbarItem(placement: .topBarLeading) {
+                                ToolbarItem(placement: .navigationBarLeading) {
                                     perGameDetailBackButton
                                 }
                             }
@@ -1147,7 +1152,7 @@ struct PerGameSettingsPanel: View {
                     ) {
                         enterControllerDetail(category)
                     }
-                    .focusEffectDisabled()
+                    .focusEffectDisabledCompat()
                 }
             }
             .padding(.vertical, 8)
@@ -1207,7 +1212,7 @@ struct PerGameSettingsPanel: View {
                     ) {
                         enterControllerDetail(category)
                     }
-                    .focusEffectDisabled()
+                    .focusEffectDisabledCompat()
                 }
             }
         }

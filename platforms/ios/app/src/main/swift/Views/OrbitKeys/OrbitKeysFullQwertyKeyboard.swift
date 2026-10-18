@@ -2,6 +2,7 @@
 // Dynamic Background sources are intentionally excluded.
 import SwiftUI
 import UIKit
+import Perception
 
 enum OrbitKeysFullQwertyDirection: Sendable {
   case left
@@ -252,7 +253,9 @@ struct OrbitKeysFullQwerty: View {
     OrbitKeysFullQwertyLayout.rows(for: model.mode)
   }
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     GeometryReader { proxy in
       let metrics = keyboardMetrics(in: proxy.size)
 
@@ -497,7 +500,9 @@ private struct OrbitKeysFullQwertyKeyButton: View {
   }
 
   @ViewBuilder
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     Group {
       if key.action == .backspace {
         keySurface
@@ -531,7 +536,7 @@ private struct OrbitKeysFullQwertyKeyButton: View {
         .buttonStyle(.plain)
       }
     }
-    .onChange(of: feedbackTrigger) { _, newValue in
+    .onChangeCompat(of: feedbackTrigger) { _, newValue in
       guard newValue > 0 else { return }
       pulse()
     }

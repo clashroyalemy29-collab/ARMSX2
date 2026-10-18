@@ -1,13 +1,16 @@
 // Adapted from OrbitKeys-iOS_COMPLETED_FINAL_FIXED.zip for ARMSX2 integration.
 // Dynamic Background sources are intentionally excluded.
 import SwiftUI
+import Perception
 
 struct OrbitKeysSettingsPanel: View {
   @ObservedObject var model: OrbitKeysModel
   let onClose: () -> Void
   @Environment(\.uiAccentColour) private var themeAccent
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     GeometryReader { proxy in
       let scrollHeight = max(96, proxy.size.height - 78)
 
@@ -37,7 +40,7 @@ struct OrbitKeysSettingsPanel: View {
               .padding(.trailing, 14)
               .padding(.bottom, 18)
           }
-          .onChange(of: model.selectedKeyboardSettingsOption) { _, option in
+          .onChangeCompat(of: model.selectedKeyboardSettingsOption) { _, option in
             withAnimation(.easeInOut(duration: 0.18)) {
               scrollProxy.scrollTo(option, anchor: .center)
             }
@@ -65,7 +68,9 @@ struct OrbitKeysSettingsPanel: View {
 private struct OrbitKeysSettingsControls: View {
   @ObservedObject var model: OrbitKeysModel
 
-  var body: some View {
+  var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+
+  @MainActor @ViewBuilder private var perceptionBodyContent: some View {
     VStack(alignment: .leading, spacing: 12) {
       settingsRow(.normalKeyboard) {
         Toggle(
