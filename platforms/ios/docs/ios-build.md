@@ -91,3 +91,23 @@ iOS device.
 - Do not rename low-level iOS JIT/runtime symbols unless you are intentionally
   changing that code path. Some internal names are compatibility plumbing and are
   not user-facing branding.
+
+## Building the iOS 16+ IPA in the cloud (no Mac, from a phone)
+
+The `iOS 16+ unsigned IPA` GitHub Actions workflow (`.github/workflows/ios16_ipa.yml`)
+builds the app on a GitHub macOS runner and uploads the unsigned IPA as an artifact.
+
+1. Open the repository on github.com in Safari, then **Actions**.
+2. Choose **iOS 16+ unsigned IPA**, tap **Run workflow**, pick the `ios16-support`
+   branch and confirm. (A push also starts it when the commit message contains
+   `[build]`.)
+3. When the run is green, open it and download **ARMSX2-iOS16-unsigned-ipa** from the
+   **Artifacts** section. If it fails, download **xcodebuild-log** and read the first
+   `error:` line; the run page also lists the first errors as annotations.
+4. The IPA is unsigned. It has to be re-signed with your own Apple ID or certificate by
+   a sideloading tool (AltStore, SideStore, Sideloadly, TrollStore where supported)
+   before it installs on a device.
+
+The workflow `iOS Swift check (iOS 16.0)` compiles only the SwiftUI layer against a
+16.0 deployment target in a few minutes and is the fastest way to catch API
+availability errors.
