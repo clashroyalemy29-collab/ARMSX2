@@ -40,7 +40,7 @@ jobs:
             echo "== variant $1 ==" >> "$REPORT"
             xcodebuild -project "$P/Probe.xcodeproj" -scheme ARMSX2iOS -configuration Release -sdk iphoneos \
               -skipMacroValidation -skipPackagePluginValidation -clonedSourcePackagesDirPath "$P/SP" \
-              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build >"$RUNNER_TEMP/xb-$1.log" 2>&1
+              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" $EXTRA build >"$RUNNER_TEMP/xb-$1.log" 2>&1
             echo "exit=$?" >> "$REPORT"
             grep -E 'error:|BUILD (SUCCEEDED|FAILED)|legacy build' "$RUNNER_TEMP/xb-$1.log" | awk '!s[$0]++' | head -12 | cut -c1-300 >> "$REPORT"
           }
@@ -51,7 +51,6 @@ jobs:
             [ -z "$2" ] || sed -i '' -E "/^[[:space:]]*($2) = /d" "$P/Probe.xcodeproj/project.pbxproj"
             try "$1"
           }
-          fresh D-only-SYMROOT-OBJROOT 'SYMROOT|OBJROOT'
-          fresh E-only-CONFIGURATION_BUILD_DIR 'CONFIGURATION_BUILD_DIR|CONFIGURATION_TEMP_DIR'
-          fresh F-only-SYMROOT 'SYMROOT'
+          EXTRA="SYMROOT=$P" fresh G-no-project-SYMROOT-plus-cli-SYMROOT 'SYMROOT|OBJROOT'
+          [ -d "$P/Release-iphoneos/ARMSX2iOS.app" ] && echo "app at $P/Release-iphoneos: yes" >> "$REPORT" || echo "app at $P/Release-iphoneos: NO" >> "$REPORT"
           echo "::notice title=probe report::$(sed 's/%/%25/g' "$REPORT" | awk '{printf "%s%%0A", $0}')"
