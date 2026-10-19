@@ -1,0 +1,54 @@
+name: iOS SPM probe
+
+# Small reproduction of the CMake-generated Xcode project plus the swift-perception
+# package, used to find which project settings block Swift packages. Runs in minutes
+# instead of the full build's ~25.
+
+on:
+  push:
+    branches: [ios16-support]
+    paths:
+      - 'platforms/ios/scripts/spm-probe/**'
+      - 'platforms/ios/scripts/add-swift-packages.*'
+      - '.github/workflows/ios_spm_probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - run: sudo xcode-select -s /Applications/Xcode_26.5.app
+      - name: Probe variants
+        run: |
+          set +e
+          cd platforms/ios
+          P="$RUNNER_TEMP/probe"; rm -rf "$P"
+          cmake -S scripts/spm-probe -B "$P" -G Xcode -DCMAKE_SYSTEM_NAME=iOS >"$RUNNER_TEMP/cmake.log" 2>&1 || tail -30 "$RUNNER_TEMP/cmake.log"
+          ./scripts/add-swift-packages.sh "$P/Probe.xcodeproj" >"$RUNNER_TEMP/add.log" 2>&1
+          REPORT="$RUNNER_TEMP/report.txt"; : > "$REPORT"
+          {
+            echo "== settings that may force legacy build locations =="
+            grep -nE '(SYMROOT|OBJROOT|CONFIGURATION_BUILD_DIR|CONFIGURATION_TEMP_DIR|BUILD_DIR|buildStyles|BuildLocation)' "$P/Probe.xcodeproj/project.pbxproj" | cut -c1-200 | head -30
+            echo "== workspace settings files =="
+            find "$P/Probe.xcodeproj" -name '*.xcsettings' -o -name '*.plist' | head
+            echo "== defaults =="
+            defaults read com.apple.dt.Xcode 2>&1 | grep -iE 'Build(Location|Style)|Legacy' | head
+          } >> "$REPORT"
+          try() { # name
+            echo "== variant $1 ==" >> "$REPORT"
+            xcodebuild -project "$P/Probe.xcodeproj" -scheme ARMSX2iOS -configuration Release -sdk iphoneos \
+              -skipMacroValidation -skipPackagePluginValidation -clonedSourcePackagesDirPath "$P/SP" \
+              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build >"$RUNNER_TEMP/xb-$1.log" 2>&1
+            echo "exit=$?" >> "$REPORT"
+            grep -E 'error:|BUILD (SUCCEEDED|FAILED)|legacy build' "$RUNNER_TEMP/xb-$1.log" | awk '!s[$0]++' | head -12 | cut -c1-300 >> "$REPORT"
+          }
+          try A-baseline
+          # B: drop build-location overrides from the project file.
+          sed -i '' -E '/^[[:space:]]*(SYMROOT|OBJROOT|CONFIGURATION_BUILD_DIR|CONFIGURATION_TEMP_DIR) = /d' "$P/Probe.xcodeproj/project.pbxproj"
+          try B-no-location-keys
+          # C: also drop the obsolete build styles CMake writes into the PBXProject.
+          sed -i '' -E '/^[[:space:]]*buildStyles = \(/,/^[[:space:]]*\);/d' "$P/Probe.xcodeproj/project.pbxproj"
+          try C-no-build-styles
+          echo "::notice title=probe report::$(sed 's/%/%25/g' "$REPORT" | awk '{printf "%s%%0A", $0}')"
