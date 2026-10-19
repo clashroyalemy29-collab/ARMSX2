@@ -1,0 +1,52 @@
+name: iOS Swift check (iOS 16.0)
+
+# Compiles only the SwiftUI layer against the iOS SDK with a 16.0 deployment target and
+# swift-perception, and lists every compiler error. Much faster than the full build.
+
+on:
+  push:
+    branches: [ios16-support]
+    paths:
+      - 'platforms/ios/app/src/main/swift/**'
+      - 'platforms/ios/scripts/swift-check/**'
+      - 'platforms/ios/scripts/add-swift-packages.*'
+      - '.github/workflows/ios_swift_check.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-swift-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift_check:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - run: sudo xcode-select -s /Applications/Xcode_26.5.app
+      - name: Cache Swift packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/swiftcheck/SP
+          key: ${{ runner.os }}-swiftcheck-spm-${{ hashFiles('platforms/ios/scripts/add-swift-packages.rb') }}
+      - name: Type-check the Swift sources
+        run: |
+          set +e
+          cd platforms/ios
+          P="$RUNNER_TEMP/swiftcheck"; mkdir -p "$P/SP"
+          rm -rf "$P/proj"
+          cmake -S scripts/swift-check -B "$P/proj" -G Xcode -DCMAKE_SYSTEM_NAME=iOS > "$P/cmake.log" 2>&1 || { tail -30 "$P/cmake.log"; }
+          ./scripts/add-swift-packages.sh "$P/proj/SwiftCheck.xcodeproj" > "$P/add.log" 2>&1 || tail -20 "$P/add.log"
+          xcodebuild -project "$P/proj/SwiftCheck.xcodeproj" -scheme ARMSX2iOS -configuration Debug -sdk iphoneos \
+            -skipMacroValidation -skipPackagePluginValidation -clonedSourcePackagesDirPath "$P/SP" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" SYMROOT="$P/proj" \
+            build > "$P/xcodebuild.log" 2>&1
+          echo "xcodebuild exit: $?"
+          # Unique "file:line:col: error: message" lines, with the path shortened.
+          grep -E ': error: ' "$P/xcodebuild.log" | sed -E 's#.*/platforms/ios/app/src/main/swift/##' | awk '!s[$0]++' > "$P/errors.txt"
+          echo "unique errors: $(wc -l < "$P/errors.txt")"
+          cat "$P/errors.txt"
+          head -c 60000 "$P/errors.txt" | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}' > "$P/errors.annot"
+          echo "::notice title=swift errors ($(wc -l < "$P/errors.txt"))::$(cat "$P/errors.annot")"
+          grep -E 'Resolve Package|error: .*(package|Package|macro)' "$P/xcodebuild.log" | head -5
+          [ ! -s "$P/errors.txt" ]

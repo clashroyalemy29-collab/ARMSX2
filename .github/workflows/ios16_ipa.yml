@@ -24,6 +24,9 @@ concurrency:
 jobs:
   build_ios:
     name: Build unsigned IPA (iOS 16.0+)
+    # The full build takes about 30 minutes, so a push only starts it when the commit
+    # message contains "[build]". Run workflow (workflow_dispatch) always starts it.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build]')
     runs-on: macos-26
     timeout-minutes: 180
     env:
