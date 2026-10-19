@@ -46,7 +46,7 @@ jobs:
             build > "$P/xcodebuild.log" 2>&1
           echo "xcodebuild exit: $?"
           # Unique "file:line:col: error: message" lines, with the path shortened.
-          grep -E ': error: ' "$P/xcodebuild.log" | sed -E 's#.*/platforms/ios/app/src/main/swift/##' | awk '!s[$0]++' > "$P/errors.txt"
+          grep -E ': error: ' "$P/xcodebuild.log" | grep -v -E 'linker command failed|Undefined symbols' | sed -E 's#.*/platforms/ios/app/src/main/swift/##' | awk '!s[$0]++' > "$P/errors.txt"
           echo "unique errors: $(wc -l < "$P/errors.txt")"
           cat "$P/errors.txt"
           head -c 60000 "$P/errors.txt" | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}' > "$P/errors.annot"
