@@ -158,6 +158,7 @@ xcodebuild \
 	-skipMacroValidation \
 	-skipPackagePluginValidation \
 	-clonedSourcePackagesDirPath "$BUILD_DIR/SourcePackages" \
+	SYMROOT="$BUILD_DIR" \
 	CODE_SIGNING_ALLOWED=NO \
 	CODE_SIGNING_REQUIRED=NO \
 	CODE_SIGN_IDENTITY="" \

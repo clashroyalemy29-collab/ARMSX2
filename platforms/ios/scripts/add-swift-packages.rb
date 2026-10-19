@@ -74,5 +74,25 @@ PACKAGES.each do |package|
 end
 
 project.save
+
+# CMake's Xcode generator writes workspace settings that select the legacy build
+# locations ("UseTargetSettings" plus custom products/intermediates paths). Xcode
+# refuses to resolve Swift packages with them: "Packages are not supported when
+# using legacy build locations". Drop those keys so Xcode uses its default
+# build system locations; build-ios-ipa.sh pins the products folder with SYMROOT.
+LEGACY_LOCATION_KEYS = %w[
+  BuildLocationStyle CustomBuildLocationType CustomBuildProductsPath
+  CustomBuildIntermediatesPath DerivedDataLocationStyle DerivedDataCustomLocation
+].freeze
+
+Dir.glob(File.join(project_path, '**', 'WorkspaceSettings.xcsettings')).each do |settings_path|
+  settings = Xcodeproj::Plist.read_from_path(settings_path)
+  removed = LEGACY_LOCATION_KEYS.select { |key| settings.delete(key) }
+  next if removed.empty?
+
+  Xcodeproj::Plist.write_to_path(settings, settings_path)
+  puts "Removed legacy build-location keys (#{removed.join(', ')}) from #{settings_path}"
+end
+
 puts "Added Swift packages to #{project_path}: " \
      "#{PACKAGES.flat_map { |p| p[:products] }.join(', ')}"
