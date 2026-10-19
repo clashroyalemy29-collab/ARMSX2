@@ -32,6 +32,8 @@ jobs:
       - name: Type-check the Swift sources
         run: |
           set +e
+          # Without this Xcode stops scheduling compile jobs after the first failing file.
+          defaults write com.apple.dt.Xcode IDEBuildingContinueBuildingAfterErrors -bool YES
           cd platforms/ios
           P="$RUNNER_TEMP/swiftcheck"; mkdir -p "$P/SP"
           rm -rf "$P/proj"
