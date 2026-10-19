@@ -75,25 +75,19 @@ end
 
 project.save
 
-# CMake's Xcode generator writes workspace settings that select the legacy build
-# locations ("UseTargetSettings" plus custom products/intermediates paths). Xcode
-# refuses to resolve Swift packages with them: "Packages are not supported when
-# using legacy build locations". Drop those keys so Xcode uses its default
-# build system locations; build-ios-ipa.sh pins the products folder with SYMROOT.
-LEGACY_LOCATION_KEYS = %w[
-  BuildLocationStyle CustomBuildLocationType CustomBuildProductsPath
-  CustomBuildIntermediatesPath DerivedDataLocationStyle DerivedDataCustomLocation
-].freeze
-
-# PlistBuddy is Apple's own parser, so it reads whatever CMake wrote, which the
-# REXML-based Xcodeproj::Plist could not.
-PLIST_BUDDY = '/usr/libexec/PlistBuddy'
-Dir.glob(File.join(project_path, '**', 'WorkspaceSettings.xcsettings')).each do |settings_path|
-  puts "Workspace settings before:\n#{`#{PLIST_BUDDY} -c Print '#{settings_path}' 2>&1`}"
-  removed = LEGACY_LOCATION_KEYS.select do |key|
-    system(PLIST_BUDDY, '-c', "Delete :#{key}", settings_path, out: File::NULL, err: File::NULL)
-  end
-  puts "Removed legacy build-location keys (#{removed.join(', ')}) from #{settings_path}" unless removed.empty?
+# CMake's Xcode generator writes a project-level SYMROOT (and OBJROOT). Xcode treats
+# that as "legacy build locations" and refuses to resolve Swift packages:
+#   "Packages are not supported when using legacy build locations".
+# Removing just those keys fixes it. The products folder is pinned again from the
+# command line (build-ios-ipa.sh passes SYMROOT="$BUILD_DIR"), so it still equals the
+# CONFIGURATION_BUILD_DIR CMake wrote and the absolute library paths CMake links
+# against stay valid. Verified with scripts/spm-probe (see ios_spm_probe.yml).
+pbxproj = File.join(project_path, 'project.pbxproj')
+text = File.read(pbxproj)
+stripped = text.gsub(/^[ \t]*(?:SYMROOT|OBJROOT) = [^;\n]*;\n/, '')
+if stripped != text
+  File.write(pbxproj, stripped)
+  puts "Removed project-level SYMROOT/OBJROOT from #{pbxproj}"
 end
 
 puts "Added Swift packages to #{project_path}: " \
