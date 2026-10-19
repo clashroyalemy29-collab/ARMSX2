@@ -40,6 +40,7 @@ jobs:
           xcodebuild -project "$P/proj/SwiftCheck.xcodeproj" -scheme ARMSX2iOS -configuration Debug -sdk iphoneos \
             -skipMacroValidation -skipPackagePluginValidation -clonedSourcePackagesDirPath "$P/SP" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" SYMROOT="$P/proj" \
+            OTHER_SWIFT_FLAGS="-Xfrontend -continue-building-after-errors" SWIFT_ENABLE_BATCH_MODE=NO COMPILER_INDEX_STORE_ENABLE=NO -jobs 4 -parallelizeTargets \
             build > "$P/xcodebuild.log" 2>&1
           echo "xcodebuild exit: $?"
           # Unique "file:line:col: error: message" lines, with the path shortened.
