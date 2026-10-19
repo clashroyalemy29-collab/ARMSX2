@@ -85,13 +85,15 @@ LEGACY_LOCATION_KEYS = %w[
   CustomBuildIntermediatesPath DerivedDataLocationStyle DerivedDataCustomLocation
 ].freeze
 
+# PlistBuddy is Apple's own parser, so it reads whatever CMake wrote, which the
+# REXML-based Xcodeproj::Plist could not.
+PLIST_BUDDY = '/usr/libexec/PlistBuddy'
 Dir.glob(File.join(project_path, '**', 'WorkspaceSettings.xcsettings')).each do |settings_path|
-  settings = Xcodeproj::Plist.read_from_path(settings_path)
-  removed = LEGACY_LOCATION_KEYS.select { |key| settings.delete(key) }
-  next if removed.empty?
-
-  Xcodeproj::Plist.write_to_path(settings, settings_path)
-  puts "Removed legacy build-location keys (#{removed.join(', ')}) from #{settings_path}"
+  puts "Workspace settings before:\n#{`#{PLIST_BUDDY} -c Print '#{settings_path}' 2>&1`}"
+  removed = LEGACY_LOCATION_KEYS.select do |key|
+    system(PLIST_BUDDY, '-c', "Delete :#{key}", settings_path, out: File::NULL, err: File::NULL)
+  end
+  puts "Removed legacy build-location keys (#{removed.join(', ')}) from #{settings_path}" unless removed.empty?
 end
 
 puts "Added Swift packages to #{project_path}: " \

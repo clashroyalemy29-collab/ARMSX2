@@ -113,7 +113,8 @@ jobs:
           }
           emit error 10 0
           emit warning 10 10
-          tail -n 10 "$LOG" | cut -c1-300 | while IFS= read -r line; do echo "::notice::tail: $line"; done
+          # Last 60 lines as one multi-line annotation (%0A is an encoded newline).
+          echo "::notice title=build log tail::$(tail -n 60 "$LOG" | cut -c1-300 | sed 's/%/%25/g' | tr -d '\r' | awk '{printf "%s%%0A", $0}')"
           cp "$LOG" platforms/ios/build-all.log || true
 
       - name: Verify the IPA targets iOS 16.0
