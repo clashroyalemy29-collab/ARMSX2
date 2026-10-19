@@ -44,11 +44,14 @@ jobs:
             echo "exit=$?" >> "$REPORT"
             grep -E 'error:|BUILD (SUCCEEDED|FAILED)|legacy build' "$RUNNER_TEMP/xb-$1.log" | awk '!s[$0]++' | head -12 | cut -c1-300 >> "$REPORT"
           }
-          try A-baseline
-          # B: drop build-location overrides from the project file.
-          sed -i '' -E '/^[[:space:]]*(SYMROOT|OBJROOT|CONFIGURATION_BUILD_DIR|CONFIGURATION_TEMP_DIR) = /d' "$P/Probe.xcodeproj/project.pbxproj"
-          try B-no-location-keys
-          # C: also drop the obsolete build styles CMake writes into the PBXProject.
-          sed -i '' -E '/^[[:space:]]*buildStyles = \(/,/^[[:space:]]*\);/d' "$P/Probe.xcodeproj/project.pbxproj"
-          try C-no-build-styles
+          fresh() { # name, sed-regex of keys to delete
+            rm -rf "$P"
+            cmake -S scripts/spm-probe -B "$P" -G Xcode -DCMAKE_SYSTEM_NAME=iOS >/dev/null 2>&1
+            ./scripts/add-swift-packages.sh "$P/Probe.xcodeproj" >/dev/null 2>&1
+            [ -z "$2" ] || sed -i '' -E "/^[[:space:]]*($2) = /d" "$P/Probe.xcodeproj/project.pbxproj"
+            try "$1"
+          }
+          fresh D-only-SYMROOT-OBJROOT 'SYMROOT|OBJROOT'
+          fresh E-only-CONFIGURATION_BUILD_DIR 'CONFIGURATION_BUILD_DIR|CONFIGURATION_TEMP_DIR'
+          fresh F-only-SYMROOT 'SYMROOT'
           echo "::notice title=probe report::$(sed 's/%/%25/g' "$REPORT" | awk '{printf "%s%%0A", $0}')"
