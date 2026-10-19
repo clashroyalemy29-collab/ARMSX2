@@ -378,8 +378,7 @@ struct StickView: View {
 
             if isDragging {
                 Circle()
-                    .fill(.black.opacity((isDragging ? 0.26 : 0.18) * padOpacity))
-                    .stroke(.white.opacity((isDragging ? 0.34 : 0.18) * padOpacity), lineWidth: isDragging ? 1.8 : 1)
+                    .fillAndStrokeCompat(fill: .black.opacity((isDragging ? 0.26 : 0.18) * padOpacity), stroke: .white.opacity((isDragging ? 0.34 : 0.18) * padOpacity), lineWidth: isDragging ? 1.8 : 1)
                     .shadow(color: .white.opacity(isDragging ? 0.22 * padOpacity : 0.05 * padOpacity), radius: isDragging ? 8 : 2)
                     .frame(width: sz, height: sz)
             }
@@ -432,8 +431,7 @@ struct StickView: View {
                     .offset(off)
             } else if isDragging {
                 Circle()
-                    .fill(.white.opacity(0.22 * padOpacity))
-                    .stroke(.white.opacity(0.34 * padOpacity), lineWidth: 1.4)
+                    .fillAndStrokeCompat(fill: .white.opacity(0.22 * padOpacity), stroke: .white.opacity(0.34 * padOpacity), lineWidth: 1.4)
                     .frame(width: knob, height: knob)
                     .offset(off)
             }

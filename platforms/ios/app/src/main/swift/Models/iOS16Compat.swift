@@ -276,3 +276,68 @@ struct ContentUnavailableCompat: View {
         }
     }
 }
+
+// MARK: - Shapes
+
+extension Shape {
+    /// `shape.fill(a).stroke(b, lineWidth:)` as iOS 17 spells it. `Shape.fill(_:style:)` and
+    /// `Shape.stroke(_:lineWidth:antialiased:)` return shapes only from iOS 17; before that they
+    /// return views, so the stroke goes in an overlay of the same shape. Same picture.
+    func fillAndStrokeCompat<F: ShapeStyle, S: ShapeStyle>(
+        fill fillStyle: F,
+        stroke strokeStyle: S,
+        lineWidth: CGFloat
+    ) -> some View {
+        self.fill(fillStyle)
+            .overlay(self.stroke(strokeStyle, lineWidth: lineWidth))
+    }
+}
+
+// MARK: - Navigation, focus and button shape
+
+extension View {
+    /// `navigationDestination(item:destination:)` (iOS 17) on top of the iOS 16
+    /// `navigationDestination(isPresented:)`.
+    @ViewBuilder
+    func navigationDestinationCompat<D: Hashable, C: View>(
+        item: Binding<D?>,
+        @ViewBuilder destination: @escaping (D) -> C
+    ) -> some View {
+        if #available(iOS 17.0, *) {
+            self.navigationDestination(item: item, destination: destination)
+        } else {
+            self.navigationDestination(
+                isPresented: Binding(
+                    get: { item.wrappedValue != nil },
+                    set: { if !$0 { item.wrappedValue = nil } }
+                )
+            ) {
+                if let value = item.wrappedValue {
+                    destination(value)
+                }
+            }
+        }
+    }
+
+    /// `focusable(_:)` (iOS 17). Keyboard focus rings do not exist on iOS 16, so there is
+    /// nothing to switch off there.
+    @ViewBuilder
+    func focusableCompat(_ isFocusable: Bool) -> some View {
+        if #available(iOS 17.0, *) {
+            self.focusable(isFocusable)
+        } else {
+            self
+        }
+    }
+
+    /// `buttonBorderShape(.circle)` (iOS 17). The capsule of a square frame is a circle, and
+    /// every call site gives the button equal width and height.
+    @ViewBuilder
+    func buttonBorderShapeCircleCompat() -> some View {
+        if #available(iOS 17.0, *) {
+            self.buttonBorderShape(.circle)
+        } else {
+            self.buttonBorderShape(.capsule)
+        }
+    }
+}

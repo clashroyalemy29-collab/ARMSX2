@@ -2682,7 +2682,7 @@ private struct ControllerAccessibilityExplicitTargetModifier: ViewModifier {
 
     @MainActor @ViewBuilder private func perceptionBodyContent(_ content: Content) -> some View {
         ControllerAccessibilityFocusedTextTint(
-            content: content.focusable(false),
+            content: content.focusableCompat(false),
             focusedColor: focusedColor
         )
         // An explicit row owns the logical target. Prevent a nested SwiftUI

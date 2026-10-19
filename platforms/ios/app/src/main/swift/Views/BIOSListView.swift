@@ -794,7 +794,7 @@ struct BIOSListView: View {
                 )
             }
             .buttonStyle(.plain)
-            .focusable(false)
+            .focusableCompat(false)
             .focusEffectDisabledCompat()
             .accessibilityElement(children: .combine)
             .accessibilityLabel(settings.localized("Import BIOS"))

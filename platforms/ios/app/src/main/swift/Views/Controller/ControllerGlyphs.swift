@@ -129,8 +129,7 @@ private struct FaceGlyph: View {
 
             ZStack {
                 Circle()
-                    .fill(.black.opacity(0.08))
-                    .stroke(.white.opacity(0.52), lineWidth: max(1.2, side * 0.04))
+                    .fillAndStrokeCompat(fill: .black.opacity(0.08), stroke: .white.opacity(0.52), lineWidth: max(1.2, side * 0.04))
 
                 switch kind {
                 case .cross:
@@ -202,8 +201,7 @@ private struct DPadGlyph: View {
 
             ZStack {
                 RoundedRectangle(cornerRadius: side * 0.20, style: .continuous)
-                    .fill(.black.opacity(0.18))
-                    .stroke(.white.opacity(0.22), lineWidth: max(1.2, side * 0.045))
+                    .fillAndStrokeCompat(fill: .black.opacity(0.18), stroke: .white.opacity(0.22), lineWidth: max(1.2, side * 0.045))
 
                 TriangleShape()
                     .fill(.white.opacity(0.72))
@@ -226,8 +224,7 @@ private struct ShoulderGlyph: View {
 
             ZStack {
                 RoundedRectangle(cornerRadius: corner, style: .continuous)
-                    .fill(.black.opacity(0.16))
-                    .stroke(.white.opacity(0.28), lineWidth: 1.6)
+                    .fillAndStrokeCompat(fill: .black.opacity(0.16), stroke: .white.opacity(0.28), lineWidth: 1.6)
 
                 Text(label)
                     .font(.system(size: max(11, geo.size.height * 0.42), weight: .semibold, design: .rounded))
@@ -253,8 +250,7 @@ private struct CapsuleGlyph: View {
         GeometryReader { geo in
             ZStack {
                 Capsule()
-                    .fill(.black.opacity(0.14))
-                    .stroke(.white.opacity(0.26), lineWidth: 1.4)
+                    .fillAndStrokeCompat(fill: .black.opacity(0.14), stroke: .white.opacity(0.26), lineWidth: 1.4)
 
                 if geo.size.width < 34 {
                     symbolView
@@ -295,8 +291,7 @@ private struct CircleLabelGlyph: View {
 
             ZStack {
                 Circle()
-                    .fill(.black.opacity(0.16))
-                    .stroke(.white.opacity(0.26), lineWidth: max(1, side * 0.055))
+                    .fillAndStrokeCompat(fill: .black.opacity(0.16), stroke: .white.opacity(0.26), lineWidth: max(1, side * 0.055))
 
                 Text(label)
                     .font(.system(size: max(6, side * 0.32), weight: .bold, design: .rounded))
@@ -317,8 +312,7 @@ private struct AnalogBaseGlyph: View {
 
             ZStack {
                 Circle()
-                    .fill(.black.opacity(0.14))
-                    .stroke(.white.opacity(0.20), lineWidth: max(1, side * 0.018))
+                    .fillAndStrokeCompat(fill: .black.opacity(0.14), stroke: .white.opacity(0.20), lineWidth: max(1, side * 0.018))
 
                 Circle()
                     .stroke(.white.opacity(0.08), lineWidth: max(1, side * 0.035))
@@ -336,8 +330,7 @@ private struct AnalogStickGlyph: View {
         GeometryReader { geo in
             ZStack {
                 Circle()
-                    .fill(.white.opacity(0.22))
-                    .stroke(.white.opacity(0.18), lineWidth: 1.2)
+                    .fillAndStrokeCompat(fill: .white.opacity(0.22), stroke: .white.opacity(0.18), lineWidth: 1.2)
 
                 Circle()
                     .fill(.white.opacity(0.10))

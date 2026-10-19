@@ -114,7 +114,7 @@ struct ShaderPresetBrowserView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(item: $selectedFolder) { child in
+        .navigationDestinationCompat(item: $selectedFolder) { child in
             ShaderPresetBrowserView(
                 title: child.name,
                 folder: child,

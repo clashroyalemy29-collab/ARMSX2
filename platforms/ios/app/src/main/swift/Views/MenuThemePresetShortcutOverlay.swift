@@ -7,6 +7,7 @@ import Perception
 
 /// The toast uses the same travel curve as the focus box without adding a
 /// second display link or animating the entire theme transaction.
+@available(iOS 17.0, *)
 private struct ThemePresetFocusAnimation: CustomAnimation {
     let style: ControllerNavigationFocusTravelStyle
 
@@ -52,9 +53,12 @@ struct MenuThemePresetShortcutOverlay: View {
     private var focusAnimation: Animation? {
         guard !reduceMotion,
               settings.controllerNavigationFocusAnimation != .immediate else { return nil }
-        return Animation(ThemePresetFocusAnimation(
-            style: settings.controllerNavigationFocusAnimation
-        ))
+        let style = settings.controllerNavigationFocusAnimation
+        if #available(iOS 17.0, *) {
+            return Animation(ThemePresetFocusAnimation(style: style))
+        }
+        // iOS 16 has no CustomAnimation; an ease with the same duration is the closest.
+        return style.duration > 0 ? .easeInOut(duration: style.duration) : nil
     }
 
     var body: some View { WithPerceptionTracking { perceptionBodyContent } }
