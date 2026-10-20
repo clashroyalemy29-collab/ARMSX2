@@ -266,7 +266,13 @@ struct VirtualControllerView: View {
         .position(x: visualRect.midX, y: visualRect.midY)
     }
 
-    var body: some View { WithPerceptionTracking { perceptionBodyContent } }
+    // The pad is positioned in physical screen coordinates (normalised x from the left),
+    // so it must not mirror with the UI language: Arabic switches the app to right-to-left
+    // and swapped the D-pad and the face buttons.
+    var body: some View {
+        WithPerceptionTracking { perceptionBodyContent }
+            .environment(\.layoutDirection, .leftToRight)
+    }
 
     @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         GeometryReader { geo in
