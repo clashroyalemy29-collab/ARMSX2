@@ -925,15 +925,22 @@ private struct SkinManifestButtonView: View {
 
     @MainActor @ViewBuilder private var perceptionBodyContent: some View {
         ZStack {
-            Color.clear
-                .frame(width: hitRect.width, height: hitRect.height)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { _ in setPressed(true) }
-                        .onEnded { _ in setPressed(false) }
-                )
-                .position(x: hitRect.midX, y: hitRect.midY)
+            Group {
+                if ARMSX2UsesUIKitPadPressSurface() {
+                    UIKitPadPressSurface(onPress: setPressed) { Color.clear }
+                        .frame(width: hitRect.width, height: hitRect.height)
+                } else {
+                    Color.clear
+                        .frame(width: hitRect.width, height: hitRect.height)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { _ in setPressed(true) }
+                                .onEnded { _ in setPressed(false) }
+                        )
+                }
+            }
+            .position(x: hitRect.midX, y: hitRect.midY)
 
             visualFace
                 .frame(width: visualRect.width, height: visualRect.height)

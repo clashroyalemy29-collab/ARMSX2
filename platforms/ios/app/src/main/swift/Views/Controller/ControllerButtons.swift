@@ -441,21 +441,24 @@ struct StickView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(isLeft ? Text("Left stick") : Text("Right stick"))
         .accessibilityAddTraits(.isButton)
-        .simultaneousGesture(DragGesture(minimumDistance: 0)
-            .onChanged { v in
+        .modifier(PadStickInput(onChanged: stickChanged, onEnded: stickEnded))
+    }
+
+    private func stickChanged(_ translation: CGSize) {
                 let maxR = (sz - knob) / 2
-                let dist = hypot(v.translation.width, v.translation.height)
+                let dist = hypot(translation.width, translation.height)
                 if dist > 4 {
                     isDragging = true
                     let d = min(dist, maxR)
-                    let a = atan2(v.translation.height, v.translation.width)
+                    let a = atan2(translation.height, translation.width)
                     off = CGSize(width: cos(a) * d, height: sin(a) * d)
                     let nx = Float(cos(a) * d / maxR); let ny = Float(sin(a) * d / maxR)
                     isLeft ? EmulatorBridge.shared.setLeftStick(x: nx, y: ny)
                            : EmulatorBridge.shared.setRightStick(x: nx, y: ny)
                 }
-            }
-            .onEnded { _ in
+    }
+
+    private func stickEnded() {
                 if !isDragging {
                     // Tap (no significant drag) → L3/R3 press
                     let btn: ARMSX2PadButton = isLeft ? .L3 : .R3
@@ -473,6 +476,5 @@ struct StickView: View {
                            : EmulatorBridge.shared.setRightStick(x: 0, y: 0)
                 }
                 isDragging = false
-            })
     }
 }

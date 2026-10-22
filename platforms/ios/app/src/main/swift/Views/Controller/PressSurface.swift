@@ -205,3 +205,96 @@ struct UIKitPadPressSurface<Content: View>: UIViewRepresentable {
         }
     }
 }
+
+// MARK: - UIKit single-finger drag (analog stick)
+
+/// Tracks one finger with UIKit touches and reports its translation from where it landed.
+///
+/// A SwiftUI `DragGesture` on the stick cancels the touches that UIKit buttons in the same
+/// hosting view receive, and on iOS 16 it also swallows a second finger. Tracking the stick with
+/// plain touches leaves SwiftUI with no recognised gesture, so the buttons keep working while the
+/// stick is held. Used wherever `ARMSX2UsesUIKitPadPressSurface()` is true.
+@MainActor
+struct UIKitPadDragSurface: UIViewRepresentable {
+    let onChanged: (CGSize) -> Void
+    let onEnded: () -> Void
+
+    func makeUIView(context: Context) -> DragView {
+        let view = DragView()
+        view.backgroundColor = .clear
+        view.isMultipleTouchEnabled = true
+        view.isExclusiveTouch = false
+        view.onChanged = onChanged
+        view.onEnded = onEnded
+        return view
+    }
+
+    func updateUIView(_ view: DragView, context: Context) {
+        view.onChanged = onChanged
+        view.onEnded = onEnded
+    }
+
+    static func dismantleUIView(_ view: DragView, coordinator: ()) {
+        view.finish()
+    }
+
+    final class DragView: UIView {
+        var onChanged: ((CGSize) -> Void)?
+        var onEnded: (() -> Void)?
+        private var tracked: UITouch?
+        private var start: CGPoint = .zero
+
+        // The stick is a circle; corners of its square frame belong to whatever is behind.
+        override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+            let radius = min(bounds.width, bounds.height) / 2
+            return hypot(point.x - bounds.midX, point.y - bounds.midY) <= radius
+        }
+
+        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+            guard tracked == nil, let touch = touches.first else { return }
+            tracked = touch
+            start = touch.location(in: self)
+            onChanged?(.zero)
+        }
+
+        override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+            guard let tracked, touches.contains(tracked) else { return }
+            let point = tracked.location(in: self)
+            onChanged?(CGSize(width: point.x - start.x, height: point.y - start.y))
+        }
+
+        override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+            guard let tracked, touches.contains(tracked) else { return }
+            finish()
+        }
+
+        override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+            guard let tracked, touches.contains(tracked) else { return }
+            finish()
+        }
+
+        func finish() {
+            guard tracked != nil else { return }
+            tracked = nil
+            onEnded?()
+        }
+    }
+}
+
+/// Stick input: UIKit touches where the UIKit press surface is used, the SwiftUI gesture otherwise.
+struct PadStickInput: ViewModifier {
+    let onChanged: (CGSize) -> Void
+    let onEnded: () -> Void
+
+    func body(content: Content) -> some View {
+        if ARMSX2UsesUIKitPadPressSurface() {
+            content.overlay(UIKitPadDragSurface(onChanged: onChanged, onEnded: onEnded))
+        } else {
+            content.simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { onChanged($0.translation) }
+                    .onEnded { _ in onEnded() }
+            )
+        }
+    }
+}
