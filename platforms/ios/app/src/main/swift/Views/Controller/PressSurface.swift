@@ -101,8 +101,11 @@ enum ARMSX2VirtualPadMaskImageCache {
 }
 
 enum VirtualPadPressSurfacePolicy {
+    /// iOS 27 and later use the UIKit button. So does iOS 16: SwiftUI's DragGesture does not
+    /// deliver a second finger there, so pressing X or square while holding the left stick did
+    /// nothing. iOS 17 to 26 keep the SwiftUI gesture they have always used.
     static func usesUIKitPressSurface(osMajorVersion: Int = ProcessInfo.processInfo.operatingSystemVersion.majorVersion) -> Bool {
-        osMajorVersion >= 27
+        osMajorVersion >= 27 || osMajorVersion < 17
     }
 }
 
@@ -131,6 +134,7 @@ struct UIKitPadPressSurface<Content: View>: UIViewRepresentable {
         let button = UIButton(type: .custom)
         button.backgroundColor = .clear
         button.isExclusiveTouch = false
+        button.isMultipleTouchEnabled = true
 
         button.addTarget(context.coordinator, action: #selector(Coordinator.touchDown), for: [.touchDown, .touchDragEnter])
         button.addTarget(context.coordinator, action: #selector(Coordinator.touchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel, .touchDragExit])
