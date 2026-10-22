@@ -114,3 +114,6 @@ availability errors.
 
 The iOS 16 build uses the UIKit button press surface for the pad (see
 `VirtualPadPressSurfacePolicy`), so several fingers work at once.
+
+The analog stick is tracked with UIKit touches where the UIKit press surface is used
+(`UIKitPadDragSurface`), so buttons keep working while it is held.
