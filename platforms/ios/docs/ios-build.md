@@ -111,3 +111,6 @@ builds the app on a GitHub macOS runner and uploads the unsigned IPA as an artif
 The workflow `iOS Swift check (iOS 16.0)` compiles only the SwiftUI layer against a
 16.0 deployment target in a few minutes and is the fastest way to catch API
 availability errors.
+
+The iOS 16 build uses the UIKit button press surface for the pad (see
+`VirtualPadPressSurfacePolicy`), so several fingers work at once.
