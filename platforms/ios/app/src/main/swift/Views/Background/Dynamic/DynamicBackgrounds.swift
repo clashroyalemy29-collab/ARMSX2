@@ -3409,17 +3409,17 @@ private final class PlayStation3XMBMartMetalRenderer: NSObject, MTKViewDelegate 
     particleDescriptor.colorAttachments[0].sourceAlphaBlendFactor = .one
     particleDescriptor.colorAttachments[0].destinationAlphaBlendFactor = .one
 
-    guard
-      let backgroundPipeline = try? device.makeRenderPipelineState(
-        descriptor: backgroundDescriptor
-      ),
-      let wavePipeline = try? device.makeRenderPipelineState(
-        descriptor: waveDescriptor
-      ),
-      let particlePipeline = try? device.makeRenderPipelineState(
-        descriptor: particleDescriptor
+    let backgroundPipeline: MTLRenderPipelineState
+    let wavePipeline: MTLRenderPipelineState
+    let particlePipeline: MTLRenderPipelineState
+    do {
+      backgroundPipeline = try device.makeRenderPipelineState(descriptor: backgroundDescriptor)
+      wavePipeline = try device.makeRenderPipelineState(descriptor: waveDescriptor)
+      particlePipeline = try device.makeRenderPipelineState(descriptor: particleDescriptor)
+    } catch {
+      DynamicBackgroundDiagnostics.record(
+        "pipeline failed: \(error.localizedDescription)"
       )
-    else {
       return nil
     }
 
@@ -4079,6 +4079,7 @@ struct PlayStation3XMBMartMetalSurface: UIViewRepresentable {
         sessionStartTime: sessionStartTime,
         geometryDetailScale: geometryDetailScale
       ) else {
+        DynamicBackgroundDiagnostics.record("renderer could not be created")
         PlayStation3XMBByMartShaderLibrary.releaseIfUnused()
         return
       }

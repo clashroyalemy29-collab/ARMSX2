@@ -85,6 +85,19 @@ struct BackgroundContainerView: View {
                 }
             }
             Color.black.opacity(effectiveDim)
+            if settings.dynamicBackgroundsEnabled {
+                // The diagnostic is a plain static, so poll it instead of observing it.
+                TimelineView(.periodic(from: .now, by: 2)) { _ in
+                    if let diagnostic = DynamicBackgroundDiagnostics.message {
+                        Text("Background: \(diagnostic)")
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 8)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                            .allowsHitTesting(false)
+                    }
+                }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()

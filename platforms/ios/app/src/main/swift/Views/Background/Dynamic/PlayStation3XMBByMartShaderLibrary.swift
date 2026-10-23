@@ -4,6 +4,17 @@
 import Foundation
 @preconcurrency import Metal
 
+/// Last reason the dynamic (Metal) menu background could not be drawn. Shown as a small
+/// diagnostic line over the menu so a black background can be explained on a device.
+@MainActor
+enum DynamicBackgroundDiagnostics {
+  static var message: String?
+  static func record(_ text: String) {
+    NSLog("[ARMSX2 Dynamic Backgrounds] %@", text)
+    if message == nil { message = text }
+  }
+}
+
 @MainActor
 enum PlayStation3XMBByMartShaderLibrary {
   private static var cachedLibrary: MTLLibrary?
@@ -29,9 +40,8 @@ enum PlayStation3XMBByMartShaderLibrary {
       cachedLibrary = library
       return library
     } catch {
-      NSLog(
-        "[ARMSX2 Dynamic Backgrounds] XMB shader compilation failed: %@",
-        error.localizedDescription
+      DynamicBackgroundDiagnostics.record(
+        "shader compile failed: \(error.localizedDescription)"
       )
       return nil
     }
