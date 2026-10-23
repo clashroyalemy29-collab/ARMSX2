@@ -117,3 +117,5 @@ The iOS 16 build uses the UIKit button press surface for the pad (see
 
 The analog stick is tracked with UIKit touches where the UIKit press surface is used
 (`UIKitPadDragSurface`), so buttons keep working while it is held.
+
+Note: the menu background shows a red diagnostic line when the Metal renderer fails.
